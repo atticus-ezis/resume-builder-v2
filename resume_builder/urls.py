@@ -18,38 +18,81 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from accounts.views import CustomPasswordResetConfirmView, CustomVerifyEmailView
-from dj_rest_auth.views import PasswordResetView
-from dj_rest_auth.registration.views import VerifyEmailView, ResendEmailVerificationView
+from dj_rest_auth.views import (
+    PasswordResetView,
+    PasswordChangeView,
+    LoginView,
+    LogoutView,
+    UserDetailsView,
+)
+from rest_framework_simplejwt.views import TokenVerifyView
+from dj_rest_auth.jwt_auth import get_refresh_view
+from dj_rest_auth.registration.views import ResendEmailVerificationView, RegisterView
 from django.views.generic import TemplateView
 
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path("accounts/", include("allauth.urls")),
+    path("applicant/", include("applicant_profile.urls")),
     path("accounts/social/", include("allauth.socialaccount.urls")),
-    # dj rest auth
-    path("password/reset/", PasswordResetView.as_view(), name="rest_password_reset"),
     path(
-        "password/reset/confirm/<uidb64>/<token>/",
-        TemplateView.as_view(template_name="accounts/password_reset_confirm.html"),
-        name="password_reset_confirm",  # placeholder
+        "api/accounts/",
+        include(
+            [
+                # registration / confirm email
+                path(
+                    "registration/",
+                    RegisterView.as_view(),
+                    name="register",
+                ),
+                path(
+                    "registration/resend-email/",
+                    ResendEmailVerificationView.as_view(),
+                    name="resend_email",
+                ),
+                path(
+                    "registration/verify-email/",
+                    CustomVerifyEmailView.as_view(),
+                    name="custom_verify_email",
+                ),
+                # basic
+                path("login/", LoginView.as_view(), name="login"),
+                path("logout/", LogoutView.as_view(), name="logout"),
+                path("user/", UserDetailsView.as_view(), name="user_details"),
+                path(
+                    "token/refresh/",
+                    get_refresh_view().as_view(),
+                    name="token_refresh",
+                ),
+                path(
+                    "token/verify/",
+                    TokenVerifyView.as_view(),
+                    name="token_verify",
+                ),
+                # reset password
+                path(
+                    "password/reset/",
+                    PasswordResetView.as_view(),
+                    name="rest_password_reset",
+                ),
+                path(
+                    "password/reset/confirm/<uidb64>/<token>/",
+                    TemplateView.as_view(
+                        template_name="accounts/password_reset_confirm.html"
+                    ),
+                    name="password_reset_confirm",  # placeholder
+                ),
+                path(
+                    "password/reset/confirm/",
+                    CustomPasswordResetConfirmView.as_view(),
+                    name="custom_password_reset_confirm",
+                ),
+                path(
+                    "password/change/",
+                    PasswordChangeView.as_view(),
+                    name="password_change",
+                ),
+            ]
+        ),
     ),
-    path(
-        "dj-rest-auth/password/reset/confirm/",
-        CustomPasswordResetConfirmView.as_view(),
-        name="custom_password_reset_confirm",
-    ),
-    # reset email
-    path(
-        "dj-rest-auth/registration/resend-email/",
-        ResendEmailVerificationView.as_view(),
-        name="resend_email",
-    ),
-    path(
-        "dj-rest-auth/registration/verify-email/",
-        CustomVerifyEmailView.as_view(),
-        name="custom_verify_email",
-    ),
-    path("dj-rest-auth/", include("dj_rest_auth.urls")),
-    path("dj-rest-auth/registration/", include("dj_rest_auth.registration.urls")),
 ]

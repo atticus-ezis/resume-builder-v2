@@ -1,0 +1,34 @@
+{
+  "full_name": "",
+  "contact": {
+    "email": "",
+    "phone": "",
+    "socials": {
+      "linkedin_url": "",
+      "github_url": "",
+      "other_url": ""
+    }
+  },
+  "work_experience": [
+    {
+      "start_date": "",
+      "end_date": "",
+      "position": "",
+      "company": "",
+      "accomplishments": [
+        { "situation": "", "task": "", "action": "", "result": "" },
+        { "situation": "", "task": "", "action": "", "result": "" },
+        "...."
+      ]
+    },
+    "..."
+  ],
+  "skills": ["skill1", "skill2", "skill3", "..."],
+  "education": {
+    "graduation_date": "",
+    "degree": "",
+    "school": ""
+  },
+  "porfolio": { "url": "", "description": "" },
+  "extra_info": ""
+}

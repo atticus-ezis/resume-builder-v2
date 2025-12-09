@@ -1,17 +1,13 @@
 import logging
 
-from dj_rest_auth.views import PasswordResetConfirmView, sensitive_post_parameters_m
+from dj_rest_auth.views import sensitive_post_parameters_m
 from rest_framework import status
 from rest_framework.response import Response
-from django.contrib.auth import get_user_model
-from allauth.account.utils import url_str_to_user_pk
 from dj_rest_auth.serializers import PasswordResetConfirmSerializer
 from rest_framework.generics import GenericAPIView
 from rest_framework.permissions import AllowAny
 from django.utils.translation import gettext_lazy as _
-from django.utils.http import urlsafe_base64_decode
 from django.views.decorators.debug import sensitive_post_parameters
-from allauth.account.models import EmailConfirmationHMAC, EmailConfirmation
 from django.utils.decorators import method_decorator
 from dj_rest_auth.jwt_auth import set_jwt_cookies
 from dj_rest_auth.registration.views import VerifyEmailView as DjRestVerifyEmailView
@@ -81,7 +77,7 @@ class CustomPasswordResetConfirmView(GenericAPIView):
         user = serializer.user
 
         response = Response(
-            {"detail": ("Password has been reset.")},
+            {"detail": _("Password has been reset.")},
             status=status.HTTP_200_OK,
         )
 

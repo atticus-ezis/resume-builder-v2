@@ -17,7 +17,7 @@ class CustomAccountAdapter(DefaultAccountAdapter):
             uid = old_url.split("/")[-3]
 
             context["password_reset_url"] = (
-                f"{settings.FRONTEND_DOMAIN}/users/password/reset/{token}/{uid}"
+                f"{settings.FRONTEND_DOMAIN}/users/password/reset/{uid}/{token}"
             )
 
         return super().send_mail(template_prefix, email, context)

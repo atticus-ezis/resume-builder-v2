@@ -74,3 +74,6 @@ elif response.status_code == 404:
     print("\n❌ ERROR: Endpoint not found")
 else:
     print(f"\n⚠️  Unexpected status code: {response.status_code}")
+
+
+

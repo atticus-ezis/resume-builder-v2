@@ -49,6 +49,8 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     #
+    "PyPDF2",
+    #
     "django.contrib.sites",
     # account
     "allauth",
@@ -57,11 +59,13 @@ INSTALLED_APPS = [
     # rest framework
     "rest_framework",
     "rest_framework_simplejwt",  # redundant?
+    "rest_framework_simplejwt.token_blacklist",  # JWT blacklist
     "rest_framework.authtoken",
     "dj_rest_auth",
     "dj_rest_auth.registration",
-    # app
+    # apps
     "accounts",
+    "applicant_profile",
 ]
 
 # for allauth
@@ -77,7 +81,9 @@ REST_FRAMEWORK = {
 
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=15),
-    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),  # add blacklist later
+    "REFRESH_TOKEN_LIFETIME": timedelta(minutes=30),
+    "ROTATE_REFRESH_TOKENS": True,
+    "BLACKLIST_AFTER_ROTATION": True,
 }
 
 # for dj-rest-auth
