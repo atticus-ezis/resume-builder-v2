@@ -1,8 +1,5 @@
 import pytest
 import re
-
-from accounts.tests.factories import UserFactory
-from rest_framework.test import APIClient
 from django.urls import reverse
 
 # from django.contrib.auth.tokens import default_token_generator

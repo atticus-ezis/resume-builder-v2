@@ -67,6 +67,7 @@ INSTALLED_APPS = [
     "accounts",
     "applicant_profile",
     "job_profile",
+    "ai_generation",
 ]
 
 # for allauth

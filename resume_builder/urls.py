@@ -32,6 +32,7 @@ from django.views.generic import TemplateView
 from rest_framework.routers import DefaultRouter
 from applicant_profile.views import UserContextViewSet
 from job_profile.views import JobDescriptionViewSet
+from ai_generation.views import GenerateResumeAndCoverLetterView, UpdateContentView
 
 router = DefaultRouter()
 router.register(r"applicant", UserContextViewSet, basename="applicant")
