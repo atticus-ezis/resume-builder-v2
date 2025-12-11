@@ -19,10 +19,10 @@ def unauthenticated_client():
 
 
 @pytest.fixture
-def confirm_context_url():
-    return reverse("confirm_context")
+def create_user_context_url():
+    return reverse("applicant-create")
 
 
 @pytest.fixture
 def upload_pdf_url():
-    return reverse("upload_pdf")
+    return reverse("applicant-upload-pdf")

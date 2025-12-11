@@ -6,13 +6,13 @@ from applicant_profile.models import UserContext
 @pytest.mark.django_db
 class TestApplicantProfileViews:
     def test_confirm_context_authenticated(
-        self, authenticated_client, confirm_context_url
+        self, authenticated_client, create_user_context_url
     ):
         client, user = authenticated_client
         text = "This is a test text"
         name = "Test Context"
         response = client.post(
-            confirm_context_url,
+            create_user_context_url,
             {
                 "context": text,
                 "name": name,
@@ -25,13 +25,13 @@ class TestApplicantProfileViews:
         assert UserContext.objects.first().user == user
 
     def test_confirm_context_unauthenticated(
-        self, unauthenticated_client, confirm_context_url
+        self, unauthenticated_client, create_user_context_url
     ):
         client = unauthenticated_client
         text = "This is a test text"
         name = "Test Context"
         response = client.post(
-            confirm_context_url,
+            create_user_context_url,
             {
                 "context": text,
                 "name": name,

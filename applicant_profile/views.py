@@ -1,50 +1,39 @@
-from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework import status
 from .services import PDFExtractor
 from rest_framework.permissions import IsAuthenticated
+from .serializers import UserContextSerializer, FileUploadSerializer
+from rest_framework import viewsets
 from .models import UserContext
+from rest_framework.pagination import PageNumberPagination
+from rest_framework.decorators import action
+
 
 # Create your views here.
 
 
-@api_view(["POST"])
-@permission_classes([IsAuthenticated])
-def upload_pdf(request):
-    resume_pdf = request.FILES.get("pdf_file")
-    if resume_pdf:
-        pdf_extractor = PDFExtractor()
-        text = pdf_extractor.execute(resume_pdf)
+class UserContextViewSet(viewsets.ModelViewSet):
+    serializer_class = UserContextSerializer
+    permission_classes = [IsAuthenticated]
+    pagination_class = PageNumberPagination
 
+    def get_queryset(self):
+        return UserContext.objects.filter(user=self.request.user)
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
+    def perform_update(self, serializer):
+        serializer.save(user=self.request.user)
+
+    @action(detail=False, methods=["post"], name="upload-pdf")
+    def upload_pdf(self, request):
+        serializer = FileUploadSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        pdf_extractor = PDFExtractor()
+        text = pdf_extractor.execute(serializer.validated_data["file"])
         return Response(
             {"message": "PDF file uploaded successfully", "text": text},
             status=status.HTTP_200_OK,
         )
-    return Response(
-        {"message": "No PDF file uploaded. Check file name is 'resume_pdf'"},
-        status=status.HTTP_400_BAD_REQUEST,
-    )
-
-
-@api_view(["POST"])
-@permission_classes([IsAuthenticated])
-def confirm_context(request):
-    context = request.data.get("context")
-    name = request.data.get("name")
-
-    if not context or not name:
-        return Response(
-            {"message": "No context or name uploaded."},
-            status=status.HTTP_400_BAD_REQUEST,
-        )
-
-    user = request.user
-    UserContext.objects.create(
-        user=user,
-        context=context,
-        name=name,
-    )
-    return Response(
-        {"message": "PDF file confirmed successfully"},
-        status=status.HTTP_200_OK,
-    )
