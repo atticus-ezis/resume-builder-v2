@@ -1,13 +1,5 @@
 import pytest
-from urllib.parse import urlparse
-from django.contrib.auth.models import User
-from django.urls import reverse
 from rest_framework.test import APIClient
-from django.core import mail
-from django.conf import settings
-from allauth.account.models import EmailAddress
-from accounts.tests.factories import user_register_request_factory
-from accounts.tests.conftest import get_confirmation_link
 from accounts.tests.factories import UserFactory
 from accounts.tests.conftest import (
     generate_uid_and_token,

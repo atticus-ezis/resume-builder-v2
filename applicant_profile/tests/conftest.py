@@ -20,7 +20,7 @@ def unauthenticated_client():
 
 @pytest.fixture
 def create_user_context_url():
-    return reverse("applicant-create")
+    return reverse("applicant-list")
 
 
 @pytest.fixture

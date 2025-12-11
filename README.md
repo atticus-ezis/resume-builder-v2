@@ -24,9 +24,9 @@ Form submission strucutre:
 [application_context.json](forms/applicant_context.json)
 
 Endpoints (authentication required):
-/upload/pdf/ POST - converts pdf to string and returns 200 and text for user review.
+api/context/applicant/ POST - converts pdf to string and returns 200 and text for user review.
 
-"api/applicant/user-context/" POST, DELETE, PUT, PATCH - finalizes the text and saves it to the database returns 200.
+"api/applicant/upload-pdf/" POST, DELETE, PUT, PATCH - finalizes the text and saves it to the database returns 200.
 
 Job Application -
 Stores context about the job for AI. Frontend will struture the dictionary (hasmap) before sending as "job_context" and "company_name"
@@ -35,5 +35,5 @@ forms/job_description.json
 forms/cover_letter.json
 
 Endpoints (authentication required):
-/job-description/ POST - stores form data with user
+api/context/applicant/ POST - stores form data with user
 send ("job_context" and "company_name")
