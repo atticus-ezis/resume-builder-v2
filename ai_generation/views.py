@@ -1,10 +1,15 @@
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from django.http import HttpResponse
 from rest_framework.views import APIView
 from applicant_profile.models import UserContext
 from job_profile.models import JobDescription
-from ai_generation.serializers import MatchContextSerializer, UpdateContentSerializer
-from ai_generation.services import APICall, UpdateContent
+from ai_generation.serializers import (
+    MatchContextSerializer,
+    UpdateContentSerializer,
+    DownloadMarkdownSerializer,
+)
+from ai_generation.services import APICall, UpdateContent, DownloadMarkdown
 from rest_framework import status
 # Create your views here.
 
@@ -60,4 +65,24 @@ class UpdateContentView(APIView):
         except Exception as e:
             return Response(
                 {"message": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+
+class DownloadMarkdownView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        serializer = DownloadMarkdownSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        markdown_content = serializer.validated_data["markdown_content"]
+        file_name = serializer.validated_data["file_name"]
+        try:
+            pdf_bytes = DownloadMarkdown(markdown_content, request).execute()
+            response = HttpResponse(pdf_bytes, content_type="application/pdf")
+            response["Content-Disposition"] = f'attachment; filename="{file_name}.pdf"'
+            return response
+        except Exception as e:
+            return Response(
+                {"message": f"Failed to generate PDF: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )

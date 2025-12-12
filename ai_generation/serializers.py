@@ -23,3 +23,8 @@ class UpdateContentSerializer(serializers.Serializer):
         required=True,
         choices=["resume", "cover letter"],
     )
+
+
+class DownloadMarkdownSerializer(serializers.Serializer):
+    markdown_content = serializers.CharField(required=True)
+    file_name = serializers.CharField(required=True)

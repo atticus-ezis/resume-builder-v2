@@ -32,7 +32,11 @@ from django.views.generic import TemplateView
 from rest_framework.routers import DefaultRouter
 from applicant_profile.views import UserContextViewSet
 from job_profile.views import JobDescriptionViewSet
-from ai_generation.views import GenerateResumeAndCoverLetterView, UpdateContentView
+from ai_generation.views import (
+    DownloadMarkdownView,
+    GenerateResumeAndCoverLetterView,
+    UpdateContentView,
+)
 
 router = DefaultRouter()
 router.register(r"applicant", UserContextViewSet, basename="applicant")
@@ -110,6 +114,31 @@ urlpatterns = [
                     ),
                 ),
                 path("context/", include(router.urls)),
+                path(
+                    "get-resume-and-cover-letter/",
+                    GenerateResumeAndCoverLetterView.as_view(),
+                    name="get_resume_and_cover_letter",
+                ),
+                path(
+                    "update-content/",
+                    UpdateContentView.as_view(),
+                    name="update_content",
+                ),
+                path(
+                    "ai-call/",
+                    GenerateResumeAndCoverLetterView.as_view(),
+                    name="ai_call",
+                ),
+                path(
+                    "ai-call/update-content/",
+                    UpdateContentView.as_view(),
+                    name="update_content",
+                ),
+                path(
+                    "download-content/",
+                    DownloadMarkdownView.as_view(),
+                    name="download_content",
+                ),
             ]
         ),
     ),

@@ -3,6 +3,11 @@ from job_profile.models import JobDescription
 from openai import OpenAI
 from resume_builder.settings import OPENAI_API_KEY
 from datetime import datetime
+from weasyprint import HTML
+import markdown
+from django.template.loader import render_to_string
+
+# mark
 
 
 command_reference = {
@@ -12,10 +17,11 @@ command_reference = {
 }
 
 
-def api_call(self, role_description, prompt):
+def api_call(client, role_description, prompt):
+    model = "gpt-4o-mini"
     try:
-        response = self.client.chat.completions.create(
-            model=self.model,
+        response = client.chat.completions.create(
+            model=model,
             messages=[
                 {"role": "system", "content": role_description},
                 {"role": "user", "content": prompt},
@@ -38,7 +44,6 @@ class APICall:
         self.command = command
         self.client = OpenAI(api_key=OPENAI_API_KEY)
         self.content_type = "markdown"
-        self.model = "gpt-4o-mini"
 
     def generate_prompt_and_role_description(self):
         command_type = command_reference[self.command]
@@ -86,7 +91,7 @@ class APICall:
         prompts = self.generate_prompt_and_role_description()
         responses = []
         for command, prompt, role_description in prompts:
-            response = api_call(role_description, prompt)
+            response = api_call(self.client, role_description, prompt)
             responses.append({command: response})
         return responses
 
@@ -123,5 +128,23 @@ class UpdateContent:
 
     def execute(self):
         prompt, role_description = self.get_prompt()
-        response = api_call(role_description, prompt)
+        response = api_call(self.client, role_description, prompt)
         return response
+
+
+class DownloadMarkdown:
+    def __init__(self, markdown_content, request):
+        self.markdown_content = markdown_content
+        self.request = request
+
+    def execute(self):
+        self.markdown_content = self.markdown_content.strip()
+        base_url = self.request.build_absolute_uri("/") if self.request else None
+        content = markdown.markdown(
+            self.markdown_content, extensions=["extra", "sane_lists"]
+        )
+        styled_html = render_to_string("markdown_styling.html", {"content": content})
+
+        pdf_bytes = HTML(string=styled_html, base_url=base_url).write_pdf()
+
+        return pdf_bytes

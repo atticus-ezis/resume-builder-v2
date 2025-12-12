@@ -12,8 +12,10 @@ dependencies = [
     "djangorestframework-simplejwt>=5.5.1",
     "environ>=1.0",
     "factory-boy>=3.3.3",
+    "markdown>=3.10",
     "openai>=2.9.0",
     "pypdf2>=3.0.1",
     "pytest>=9.0.1",
     "pytest-django>=4.11.1",
+    "weasyprint>=67.0",
 ]
