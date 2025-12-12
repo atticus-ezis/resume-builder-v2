@@ -25,6 +25,7 @@ if local_env.exists():
     environ.Env.read_env(local_env)
 
 FRONTEND_DOMAIN = env.str("FRONTEND_DOMAIN")
+OPENAI_API_KEY = env.str("OPENAI_API_KEY")
 
 
 # Quick-start development settings - unsuitable for production

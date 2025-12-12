@@ -141,7 +141,9 @@ class DownloadMarkdown:
         self.markdown_content = self.markdown_content.strip()
         base_url = self.request.build_absolute_uri("/") if self.request else None
         content = markdown.markdown(
-            self.markdown_content, extensions=["extra", "sane_lists"]
+            self.markdown_content,
+            extensions=["extra", "sane_lists"],
+            output_format="html5",
         )
         styled_html = render_to_string("markdown_styling.html", {"content": content})
 
