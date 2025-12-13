@@ -6,6 +6,7 @@ App that creates custom resumes and cover letters. Users can upload their curren
 
 - JWT Cookies that use blacklist / rotation
 - Endpoints come from: [Dj Rest Auth](https://github.com/iMerica/dj-rest-auth/)
+- urls start with "api/accounts/..."
 - Customized emails that link to frontend
 - Created auto-login for email verification and password resets
 
@@ -28,17 +29,19 @@ See: [`forms/applicant_context.json`](forms/applicant_context.json)
 
 ### Endpoints (authentication required)
 
-- `POST api/context/applicant/` - Converts PDF to string and returns 200 and text for user review.
+- `POST api/context/applicant/upload-pdf` - Converts PDF to string and
+  the database, returns 200.
+
+  ```json
+  { "file": "..." }
+  ```
+
+- `POST/DELETE/PUT/PATCH api/applicant/` - Finalizes the text and saves it to
+  returns 200 and text for user review.
 
   ```json
   { "name": "...", "context": "..." }
   ```
-
-- `POST/DELETE/PUT/PATCH api/applicant/upload-pdf/` - Finalizes the text and saves it to the database, returns 200.
-  ```json
-  { "file": "..." }
-  ```
-  Creates and saves (201 status)
 
 ## Job Profile
 
@@ -57,9 +60,11 @@ See: [`forms/job_description.json`](forms/job_description.json)
 
 Takes context from user and job profiles and passes it to AI. Returns a Markdown text file that can be downloaded as PDF after user review. Creates 2 prompts with functions - one for resume and cover letter. After initial generation, allows a "re-prompt" with user instructions and user edit of markdown before download.
 
+**Note:** All generated and updated content is automatically saved as drafts to the database, allowing users to resume work later.
+
 ### Databases
 
-- `resume/cover_letter` - Stores downloaded version of cover letter + resume
+- `resume/cover_letter` - Stores draft and final versions of cover letter + resume
 - FK (user) - one-to-many relationship with user
 - FK (job) - one-to-many relationship with job
 
@@ -72,15 +77,16 @@ Takes context from user and job profiles and passes it to AI. Returns a Markdown
   {
     "user_context_id": "...",
     "job_description_id": "...",
-    "command": "..."
+    "command": "generate_resume" | "generate_cover_letter" | "generate_both"
   }
   ```
   Returns:
   ```json
   {
-    "response": [{ "resume": "..." }, { "cover letter": "..." }]
+    "markdown": [{ "resume": "..." }, { "cover letter": "..." }]
   }
   ```
+  **Note:** Automatically saves generated content as drafts to the database.
 
 #### Update Prompt
 
@@ -89,17 +95,43 @@ Takes context from user and job profiles and passes it to AI. Returns a Markdown
   {
     "content": "...",
     "instructions": "...",
-    "content_type": "resume" | "cover letter"
+    "content_type": "resume" | "cover letter",
+    "job_description_id": "..."
   }
   ```
+  Returns:
+  ```json
+  {
+    "markdown": "..."
+  }
+  ```
+  **Note:** Automatically saves updated content as a draft to the database.
 
 #### Download Markdown
 
 - `POST api/download-content/`
+
+  Option A: Fetch from saved draft (recommended)
+
+  ```json
+  {
+    "file_name": "...",
+    "job_description_id": "...",
+    "content_type": "resume" | "cover letter"
+  }
+  ```
+
+  Option B: Override with edited content
+
   ```json
   {
     "markdown_content": "...",
-    "file_name": "..." // build with context: full name
+    "file_name": "...",
+    "job_description_id": "...",
+    "content_type": "resume" | "cover letter"
   }
   ```
-  Returns: PDF file
+
+  Returns: PDF file (also saves final version to database)
+
+  **Note:** If `markdown_content` is not provided, the endpoint fetches the latest saved draft from the database. If provided, it uses that content (allowing for local edits) and saves it as the final version.

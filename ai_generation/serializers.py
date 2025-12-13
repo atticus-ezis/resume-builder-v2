@@ -23,8 +23,20 @@ class UpdateContentSerializer(serializers.Serializer):
         required=True,
         choices=["resume", "cover letter"],
     )
+    job_description_id = serializers.PrimaryKeyRelatedField(
+        queryset=JobDescription.objects.none(),
+        required=True,
+        source="job_description",
+    )
 
 
 class DownloadMarkdownSerializer(serializers.Serializer):
-    markdown_content = serializers.CharField(required=True)
+    markdown_content = serializers.CharField(required=False, allow_blank=True)
     file_name = serializers.CharField(required=True)
+    job_description_id = serializers.PrimaryKeyRelatedField(
+        queryset=JobDescription.objects.none(), source="job_description"
+    )
+    content_type = serializers.ChoiceField(
+        required=True,
+        choices=["resume", "cover letter"],
+    )

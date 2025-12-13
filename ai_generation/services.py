@@ -113,7 +113,7 @@ class UpdateContent:
             "=== INSTRUCTIONS ===\n"
             f"{self.instructions}\n\n"
             f"- Return as {self.content_type} for clean export.\n"
-            f"- IMPORTANT: Do NOT wrap your response in code fences (triple backticks ```). Return the raw {self.content_type} "
+            f"- IMPORTANT: Reutrn only the edited content. No commentary or explanation needed. Do NOT wrap your response in code fences (triple backticks ```). Return the raw {self.content_type} "
             "content only for immediate export.\n"
         )
         role_description = (
