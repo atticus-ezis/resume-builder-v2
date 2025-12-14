@@ -30,5 +30,11 @@
     "school": ""
   },
   "porfolio": { "url": "", "description": "" },
+  "projects": [{ "name": "", "description": "", "url": "" }, { "name": "", "description": "", "url": "" }, "...."],
+  "certifications": [
+    { "name": "", "description": "", "url": "" },
+    { "name": "", "description": "", "url": "" },
+    "...."
+  ],
   "extra_info": ""
 }

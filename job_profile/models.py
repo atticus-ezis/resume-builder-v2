@@ -6,7 +6,8 @@ from django.contrib.auth.models import User
 class JobDescription(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="job_apps")
     company_name = models.CharField(max_length=255)
-    job_context = models.TextField()
+    job_position = models.CharField(max_length=255)
+    job_context = models.JSONField(required=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

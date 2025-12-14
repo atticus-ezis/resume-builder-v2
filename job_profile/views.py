@@ -24,10 +24,14 @@ class JobDescriptionViewSet(viewsets.ModelViewSet):
         return JobDescription.objects.filter(user=self.request.user)
 
     def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+        job_context = serializer.validated_data["job_context"]
+        job_position = job_context.get("job_position")
+        serializer.save(user=self.request.user, job_position=job_position)
 
     def perform_update(self, serializer):
-        serializer.save(user=self.request.user)
+        job_context = serializer.validated_data["job_context"]
+        job_position = job_context.get("job_position")
+        serializer.save(user=self.request.user, job_position=job_position)
 
     def perform_delete(self, serializer):
         serializer.delete(user=self.request.user)

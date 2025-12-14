@@ -43,10 +43,21 @@ class UserContextViewSet(viewsets.ModelViewSet):
     def upload_pdf(self, request):
         serializer = FileUploadSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
+        file = serializer.validated_data["file"]
+        name = serializer.validated_data["name"]
 
         pdf_extractor = PDFExtractor()
-        text = pdf_extractor.execute(serializer.validated_data["file"])
+        text = pdf_extractor.execute(file)
+
+        user_context = UserContext.objects.create(
+            user=request.user,
+            name=name,
+            context=text,
+        )
         return Response(
-            {"message": "PDF file uploaded successfully", "text": text},
+            {
+                "message": "PDF file uploaded successfully",
+                "user_context_id": user_context.id,
+            },
             status=status.HTTP_200_OK,
         )

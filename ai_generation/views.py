@@ -9,7 +9,7 @@ from ai_generation.serializers import (
     UpdateContentSerializer,
     DownloadMarkdownSerializer,
 )
-from ai_generation.models import JobApplication, Resume, CoverLetter
+from ai_generation.models import Document, DocumentVersion
 from ai_generation.services import APICall, UpdateContent, DownloadMarkdown
 from rest_framework import status
 # Create your views here.
@@ -23,10 +23,36 @@ class GenerateResumeAndCoverLetterView(APIView):
     def post(self, request):
         user_context, job_description, command = self.get_context(request)
         try:
-            chat_response = APICall(user_context, job_description, command).execute()
-            # Save drafts to database
-            self.save_drafts(chat_response, job_description)
-            return Response({"markdown": chat_response}, status=status.HTTP_200_OK)
+            chat_responses = APICall(user_context, job_description, command).execute()
+        except Exception as e:
+            return Response(
+                {"message": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+        try:
+            responses = []
+            for response in chat_responses:
+                command = response["command"]
+                markdown = response["markdown"]
+                document = Document.objects.create(
+                    user=request.user,
+                    user_context=user_context,
+                    job_description=job_description,
+                    document_type=command,
+                )
+                document_version = DocumentVersion.objects.create(
+                    document=document,
+                    markdown=markdown,
+                )
+                response = {
+                    "markdown": markdown,
+                    "document": {"id": document.id, "type": document.document_type},
+                    "document_version": {
+                        "id": document_version.id,
+                        "version": document_version.version_number,
+                    },
+                }
+                responses.append(response)
+            return Response(responses, status=status.HTTP_200_OK)
         except Exception as e:
             return Response(
                 {"message": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
@@ -52,23 +78,6 @@ class GenerateResumeAndCoverLetterView(APIView):
 
         return user_context, job_description, command
 
-    def save_drafts(self, responses, job_description):
-        """Save generated content as drafts to Resume/CoverLetter models."""
-        for response_dict in responses:
-            for content_type, content in response_dict.items():
-                if content_type == "resume":
-                    Resume.objects.update_or_create(
-                        user=self.request.user,
-                        job_description=job_description,
-                        defaults={"content": content},
-                    )
-                elif content_type == "cover letter":
-                    CoverLetter.objects.update_or_create(
-                        user=self.request.user,
-                        job_description=job_description,
-                        defaults={"content": content},
-                    )
-
 
 class UpdateContentView(APIView):
     permission_classes = [IsAuthenticated]
@@ -82,30 +91,12 @@ class UpdateContentView(APIView):
         content = serializer.validated_data["content"]
         instructions = serializer.validated_data["instructions"]
         content_type = serializer.validated_data["content_type"]
-        job_description = serializer.validated_data["job_description"]
         try:
             chat_response = UpdateContent(content, instructions, content_type).execute()
-            # Save draft to database
-            self.save_draft(chat_response, job_description, content_type)
             return Response({"markdown": chat_response}, status=status.HTTP_200_OK)
         except Exception as e:
             return Response(
                 {"message": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-
-    def save_draft(self, markdown_content, job_description, content_type):
-        """Save updated content as draft to Resume/CoverLetter models."""
-        if content_type == "resume":
-            Resume.objects.update_or_create(
-                user=self.request.user,
-                job_description=job_description,
-                defaults={"content": markdown_content},
-            )
-        elif content_type == "cover letter":
-            CoverLetter.objects.update_or_create(
-                user=self.request.user,
-                job_description=job_description,
-                defaults={"content": markdown_content},
             )
 
 

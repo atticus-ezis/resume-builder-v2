@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from applicant_profile.models import UserContext
 from job_profile.models import JobDescription
+from ai_generation.models import DocumentVersion, Document
 
 
 class MatchContextSerializer(serializers.Serializer):
@@ -17,17 +18,30 @@ class MatchContextSerializer(serializers.Serializer):
 
 
 class UpdateContentSerializer(serializers.Serializer):
-    content = serializers.CharField(required=True)
+    markdown = serializers.CharField(required=False, allow_null=True)
     instructions = serializers.CharField(required=True)
-    content_type = serializers.ChoiceField(
-        required=True,
-        choices=["resume", "cover letter"],
+    document_version_id = serializers.PrimaryKeyRelatedField(
+        queryset=DocumentVersion.objects.none(), source="document_version"
     )
-    job_description_id = serializers.PrimaryKeyRelatedField(
-        queryset=JobDescription.objects.none(),
-        required=True,
-        source="job_description",
-    )
+    document = serializers.SerializerMethodField()
+    document_version = serializers.SerializerMethodField()
+
+    def get_document(self, obj):
+        document = obj.document_version.document
+        data = {}
+        data["id"] = document.id
+        data["document_type"] = document.document_type
+        return data
+
+    def get_document_version(self, obj):
+        data = {}
+        data["id"] = obj.document_version.id
+        data["version_number"] = obj.document_version.version_number
+        return data
+
+    class Meta:
+        fields = ["markdown", "instructions", "document_version_id"]
+        read_only_fields = ["markdown", "document", "document_version"]
 
 
 class DownloadMarkdownSerializer(serializers.Serializer):

@@ -33,7 +33,7 @@ See: [`forms/applicant_context.json`](forms/applicant_context.json)
   the database, returns 200.
 
   ```json
-  { "file": "..." }
+  { "file": "...", "name": "..." }
   ```
 
 - `POST/DELETE/PUT/PATCH api/applicant/` - Finalizes the text and saves it to
@@ -51,7 +51,14 @@ See: [`forms/job_description.json`](forms/job_description.json)
 
 ### Endpoints (authentication required)
 
+CRUD from viewset
+
 - `POST api/context/job/` - Stores form data with user
+- `GET api/context/job/` -
+- `GET api/context/job/{id}` -
+- `PUT api/context/job/{id}` -
+- `PATCH api/context/job/{id}` -
+- `DELETE api/context/job/{id}` -
   ```json
   { "company_name": "...", "job_context": "..." }
   ```
@@ -60,19 +67,28 @@ See: [`forms/job_description.json`](forms/job_description.json)
 
 Takes context from user and job profiles and passes it to AI. Returns a Markdown text file that can be downloaded as PDF after user review. Creates 2 prompts with functions - one for resume and cover letter. After initial generation, allows a "re-prompt" with user instructions and user edit of markdown before download.
 
-**Note:** All generated and updated content is automatically saved as drafts to the database, allowing users to resume work later.
-
 ### Databases
 
-- `resume/cover_letter` - Stores draft and final versions of cover letter + resume
-- FK (user) - one-to-many relationship with user
-- FK (job) - one-to-many relationship with job
+**Note:** Should persist these instances incase user wants to undo future edits.
+
+- Document:
+  user (FK)
+  user_context (FK)
+  job_description (FK)
+  document_type: "resume", "cover_letter"
+  final_version: DocumentVerison (FK)
+
+- DocumentVersion:
+  document (FK)
+  markdown: TextField
+  version_number: IntField
 
 ### Endpoints
 
 #### Generate Resume + Cover Letter
 
 - `POST api/ai-call/`
+
   ```json
   {
     "user_context_id": "...",
@@ -80,58 +96,53 @@ Takes context from user and job profiles and passes it to AI. Returns a Markdown
     "command": "generate_resume" | "generate_cover_letter" | "generate_both"
   }
   ```
+
   Returns:
+
   ```json
   {
-    "markdown": [{ "resume": "..." }, { "cover letter": "..." }]
+    [
+      {
+        "markdown": "...",
+        "document": { "id": "", "type": "" },
+        "document_version": { "id": "", "version": "" }
+      }
+    ]
   }
   ```
-  **Note:** Automatically saves generated content as drafts to the database.
 
 #### Update Prompt
 
 - `POST api/ai-call/update-content/`
+
   ```json
   {
-    "content": "...",
+    "markdown": "optional", // only include if user edits text before re-prompting. This will create a new verssion
     "instructions": "...",
-    "content_type": "resume" | "cover letter",
-    "job_description_id": "..."
+    "document_version_id": "int"
   }
   ```
+
   Returns:
+
   ```json
   {
-    "markdown": "..."
+    "markdown": "...",
+    "document": { "id": "", "type": "" },
+    "document_version": { "id": "", "version": "" }
   }
   ```
-  **Note:** Automatically saves updated content as a draft to the database.
 
 #### Download Markdown
 
-- `POST api/download-content/`
+Fetch from with saved draft or edited content
 
-  Option A: Fetch from saved draft (recommended)
-
+- `POST api/finalize-and-download/`
   ```json
   {
     "file_name": "...",
-    "job_description_id": "...",
-    "content_type": "resume" | "cover letter"
+    "document_version_id": "optional",
+    "markdown": "optional", // if user edits UI textfield then make this the final version.
+    "document_id": "" // needed if version isn't included.
   }
   ```
-
-  Option B: Override with edited content
-
-  ```json
-  {
-    "markdown_content": "...",
-    "file_name": "...",
-    "job_description_id": "...",
-    "content_type": "resume" | "cover letter"
-  }
-  ```
-
-  Returns: PDF file (also saves final version to database)
-
-  **Note:** If `markdown_content` is not provided, the endpoint fetches the latest saved draft from the database. If provided, it uses that content (allowing for local edits) and saves it as the final version.

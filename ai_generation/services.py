@@ -46,13 +46,13 @@ class APICall:
         self.content_type = "markdown"
 
     def generate_prompt_and_role_description(self):
-        command_type = command_reference[self.command]
+        commands = command_reference[self.command]
         output_instructions = []
         cover_letter_instructions = (
             f"If Hiring Manager is blank, address the letter to: '{self.job_description.company_name}'s Hiring Team "
             f"instead. Not '[Hiring Manager Name]'. The Date is: '{datetime.now().strftime('%B %d, %Y')}'."
         )
-        for command in command_type:
+        for command in commands:
             prompt = (
                 f"Return a {command} in {self.content_type}. Response should only contain the {command} content, no additionalcommentary or explanation."
                 "Content must be ATS-friendly, concise, and persuasive. "
@@ -83,6 +83,8 @@ class APICall:
                 "don't include placeholders like '[Hiring Manager Name]' or '[Date]' for missing information. "
                 "Simply omit those elements from the output.\n"
             )
+            if command == "cover letter":
+                command = "cover_letter"
             output_instructions.append((command, prompt, role_description))
 
         return output_instructions
@@ -92,7 +94,7 @@ class APICall:
         responses = []
         for command, prompt, role_description in prompts:
             response = api_call(self.client, role_description, prompt)
-            responses.append({command: response})
+            responses.append({"command": command, "markdown": response})
         return responses
 
 

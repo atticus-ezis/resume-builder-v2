@@ -13,11 +13,12 @@ class UserContextListSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserContext
         fields = ["id", "name", "created_at", "updated_at"]
-        read_only_fields = "__all__"
+        read_only_fields = ["id", "name", "created_at", "updated_at"]
 
 
 class FileUploadSerializer(serializers.Serializer):
-    file = serializers.FileField()
+    file = serializers.FileField(required=True)
+    name = serializers.CharField(required=True)
 
     def validate_file(self, value):
         if not value.name.endswith(".pdf"):

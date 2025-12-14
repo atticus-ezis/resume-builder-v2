@@ -1,72 +1,59 @@
 from django.db import models
 from django.contrib.auth.models import User
 from job_profile.models import JobDescription
+from applicant_profile.models import UserContext
 
 # Create your models here.
 
 
-class Resume(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="resumes")
-    job_description = models.ForeignKey(
-        JobDescription, on_delete=models.CASCADE, related_name="resumes"
-    )
-    content = models.TextField()
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        unique_together = ("user", "job_description")
-
-    def __str__(self):
-        return f"{self.user.username} - {self.job_description.company_name} Resume"
-
-
-class CoverLetter(models.Model):
-    user = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name="cover_letters"
+class Document(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="documents")
+    user_context = models.ForeignKey(
+        UserContext, on_delete=models.CASCADE, related_name="documents"
     )
     job_description = models.ForeignKey(
-        JobDescription, on_delete=models.CASCADE, related_name="cover_letters"
+        JobDescription, on_delete=models.CASCADE, related_name="documents"
     )
-    content = models.TextField()
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        unique_together = ("user", "job_description")
-
-    def __str__(self):
-        return (
-            f"{self.user.username} - {self.job_description.company_name} Cover Letter"
-        )
-
-
-class JobApplication(models.Model):
-    user = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name="job_applications"
-    )
-    job_description = models.ForeignKey(
-        JobDescription, on_delete=models.CASCADE, related_name="job_applications"
-    )
-    resume = models.ForeignKey(
-        Resume,
+    document_type = models.CharField(max_length=255, choices=["resume", "cover_letter"])
+    final_version = models.ForeignKey(
+        "DocumentVersion",  # forward reference
         on_delete=models.SET_NULL,
-        related_name="job_applications",
-        null=True,
-        blank=True,
-    )
-    cover_letter = models.ForeignKey(
-        CoverLetter,
-        on_delete=models.SET_NULL,
-        related_name="job_applications",
+        related_name="final_version",
         null=True,
         blank=True,
     )
     created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        unique_together = ("user", "job_description")
 
     def __str__(self):
-        return f"{self.user.username} - {self.job_description.company_name}"
+        return f"{self.job_description.company_name} - {self.document_type}"
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["user", "user_context", "job_context", "document_type"],
+                name="unique_job_per_user",
+            )
+        ]
+
+
+class DocumentVersion(models.Model):
+    document = models.ForeignKey(
+        Document, on_delete=models.CASCADE, related_name="versions"
+    )
+    markdown = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    version_number = models.IntegerField(default=1)
+
+    def __str__(self):
+        return f"Version {self.id} of {self.document.job_description.company_name} - {self.document.document_type} - {self.created_at}"
+
+    def save(self, *args, **kwargs):
+        if not self.pk:
+            last = (
+                DocumentVersion.objects.filter(document=self.document)
+                .order_by("-version_number")
+                .first()
+            )
+            if last:
+                self.version_number = last.version_number + 1
+        super().save(*args, **kwargs)
