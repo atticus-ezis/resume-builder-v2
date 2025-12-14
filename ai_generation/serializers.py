@@ -19,29 +19,59 @@ class MatchContextSerializer(serializers.Serializer):
 
 class UpdateContentSerializer(serializers.Serializer):
     markdown = serializers.CharField(required=False, allow_null=True)
-    instructions = serializers.CharField(required=True)
     document_version_id = serializers.PrimaryKeyRelatedField(
-        queryset=DocumentVersion.objects.none(), source="document_version"
+        queryset=DocumentVersion.objects.none(),
+        source="document_version",
+        required=False,
+        allow_null=True,
     )
+    instructions = serializers.CharField(required=True)
+    content = serializers.SerializerMethodField()
+
+    def get_content(self, obj):
+        if obj.markdown:
+            return obj.markdown
+        else:
+            return obj.document_version.markdown
+
+    def validate(self, val):
+        markdown = val.get("markdown")
+        document_version = val.get("document_version")
+
+        if markdown is not None and document_version is not None:
+            raise serializers.ValidationError(
+                "Either 'markdown' or 'document_version_id' must be provided, but not both."
+            )
+
+        if markdown is None and document_version is None:
+            raise serializers.ValidationError(
+                "Either 'markdown' or 'document_version_id' must be provided."
+            )
+
+        return val
+
+
+class DocumentVersionResponseSerializer(serializers.ModelSerializer):
+    """Serializer for DocumentVersion response format used across multiple views."""
+
     document = serializers.SerializerMethodField()
     document_version = serializers.SerializerMethodField()
 
+    class Meta:
+        model = DocumentVersion
+        fields = ["markdown", "document", "document_version"]
+
     def get_document(self, obj):
-        document = obj.document_version.document
-        data = {}
-        data["id"] = document.id
-        data["document_type"] = document.document_type
-        return data
+        return {
+            "id": obj.document.id,
+            "type": obj.document.document_type,
+        }
 
     def get_document_version(self, obj):
-        data = {}
-        data["id"] = obj.document_version.id
-        data["version_number"] = obj.document_version.version_number
-        return data
-
-    class Meta:
-        fields = ["markdown", "instructions", "document_version_id"]
-        read_only_fields = ["markdown", "document", "document_version"]
+        return {
+            "id": obj.id,
+            "version": obj.version_number,
+        }
 
 
 class DownloadMarkdownSerializer(serializers.Serializer):

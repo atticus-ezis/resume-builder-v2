@@ -94,17 +94,21 @@ class APICall:
         responses = []
         for command, prompt, role_description in prompts:
             response = api_call(self.client, role_description, prompt)
+            if response is None:
+                raise Exception(
+                    f"Failed to generate {command}: API call returned no response"
+                )
             responses.append({"command": command, "markdown": response})
         return responses
 
 
 class UpdateContent:
-    def __init__(self, content: str, instructions: str, content_type: str):
+    def __init__(self, content: str, instructions: str, document_type: str):
         self.content = content
         self.instructions = instructions
         self.client = OpenAI(api_key=OPENAI_API_KEY)
         self.model = "gpt-4o-mini"
-        self.content_type = content_type
+        self.document_type = document_type
         self.content_type = "markdown"
 
     def get_prompt(self):
@@ -131,6 +135,8 @@ class UpdateContent:
     def execute(self):
         prompt, role_description = self.get_prompt()
         response = api_call(self.client, role_description, prompt)
+        if response is None:
+            raise Exception("Failed to update content: API call returned no response")
         return response
 
 
