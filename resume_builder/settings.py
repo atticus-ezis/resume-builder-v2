@@ -13,6 +13,24 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 from datetime import timedelta
 from pathlib import Path
 import environ
+import os
+import sys
+
+# Set library path for WeasyPrint on macOS
+# This ensures that WeasyPrint can find required system libraries like libgobject-2.0-0
+# WeasyPrint requires Pango and its dependencies which are installed via Homebrew
+# Note: This is only needed on macOS, not in Docker/Linux containers
+if sys.platform == "darwin":  # macOS only
+    # Check for Apple Silicon (M1/M2/M3) Homebrew path first, then Intel Mac path
+    homebrew_paths = ["/opt/homebrew/lib", "/usr/local/lib"]
+    for lib_path in homebrew_paths:
+        if os.path.exists(lib_path):
+            current_path = os.environ.get("DYLD_FALLBACK_LIBRARY_PATH", "")
+            if lib_path not in current_path:
+                os.environ["DYLD_FALLBACK_LIBRARY_PATH"] = (
+                    f"{lib_path}:{current_path}" if current_path else lib_path
+                )
+            break
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -24,8 +42,8 @@ local_env = BASE_DIR / ".env"
 if local_env.exists():
     environ.Env.read_env(local_env)
 
-FRONTEND_DOMAIN = env.str("FRONTEND_DOMAIN")
-OPENAI_API_KEY = env.str("OPENAI_API_KEY")
+FRONTEND_DOMAIN = env.str("FRONTEND_DOMAIN", "http://localhost:3000")
+OPENAI_API_KEY = env.str("OPENAI_API_KEY", "")
 
 
 # Quick-start development settings - unsuitable for production

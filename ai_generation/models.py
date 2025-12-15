@@ -14,7 +14,9 @@ class Document(models.Model):
     job_description = models.ForeignKey(
         JobDescription, on_delete=models.CASCADE, related_name="documents"
     )
-    document_type = models.CharField(max_length=255, choices=["resume", "cover_letter"])
+    document_type = models.CharField(
+        max_length=255, choices=[("resume", "Resume"), ("cover_letter", "Cover Letter")]
+    )
     final_version = models.ForeignKey(
         "DocumentVersion",  # forward reference
         on_delete=models.SET_NULL,
@@ -30,7 +32,7 @@ class Document(models.Model):
     class Meta:
         constraints = [
             models.UniqueConstraint(
-                fields=["user", "user_context", "job_context", "document_type"],
+                fields=["user", "user_context", "job_description", "document_type"],
                 name="unique_job_per_user",
             )
         ]

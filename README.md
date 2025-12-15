@@ -106,7 +106,7 @@ Takes context from user and job profiles and passes it to AI. Returns a Markdown
         "markdown": "...",
         "document": { "id": "", "type": "" },
         "document_version": { "id": "", "version": "" }
-      }
+      }, 2x
     ]
   }
   ```
@@ -117,11 +117,13 @@ Takes context from user and job profiles and passes it to AI. Returns a Markdown
 
   ```json
   {
-    "markdown": "optional", // only include if user edits text before re-prompting. This will create a new verssion
     "instructions": "...",
-    "document_version_id": "int"
+    "document_version_id": "int",
+    "markdown": "optional" // only include if user edits text before re-prompting. This will create a new doc version
   }
   ```
+
+  Need (markdown + document_id) or (document_version_id)
 
   Returns:
 
@@ -138,11 +140,49 @@ Takes context from user and job profiles and passes it to AI. Returns a Markdown
 Fetch from with saved draft or edited content
 
 - `POST api/finalize-and-download/`
+
   ```json
   {
     "file_name": "...",
     "document_version_id": "optional",
-    "markdown": "optional", // if user edits UI textfield then make this the final version.
-    "document_id": "" // needed if version isn't included.
+    "markdown": "optional" // creates new document version if exists and different
   }
   ```
+
+  Returns:
+  (pdf file)
+
+  ### Document Display and Management
+
+  api/context/document/ (CRUD)
+
+  Document (list)
+  fields = [
+  "id", "document_type", "company_name", "job_position"
+  ]
+
+  Document (detail)
+  fields = [
+  "id",
+  "job_description", (FK)
+  "user_context", (FK)
+  "document_type",
+  "content",
+  "draft_count": int,
+  "created_at",
+  ]
+
+  ###
+
+  api/context/document-version/ (CRUD)
+
+  DocumentVersion
+  fields = ["id", "document", "version_number", "markdown", "created_at"]
+
+  #### Docker Notes
+
+  build:
+  docker build -t resume-builder .
+
+  run:
+  docker run -p 8000:8000 resume-builder

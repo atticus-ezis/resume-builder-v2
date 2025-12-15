@@ -21,6 +21,12 @@ class JobDescriptionSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(f"Fields {missing_fields} are required")
         return value
 
+    def validate(self, val):
+        job_context = val.get("job_context")
+        if job_context:
+            val["job_position"] = job_context["job_position"]
+        return val
+
     class Meta:
         model = JobDescription
         fields = [

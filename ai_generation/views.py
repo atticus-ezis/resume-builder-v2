@@ -9,10 +9,15 @@ from ai_generation.serializers import (
     UpdateContentSerializer,
     DownloadMarkdownSerializer,
     DocumentVersionResponseSerializer,
+    DocumentListSerializer,
+    DocumentSerializer,
+    DocumentVersionSerializer,
 )
 from ai_generation.models import Document, DocumentVersion
 from ai_generation.services import APICall, UpdateContent, DownloadMarkdown
 from rest_framework import status
+from rest_framework.pagination import PageNumberPagination
+from rest_framework import viewsets
 # Create your views here.
 
 # frontend must match context models
@@ -34,7 +39,7 @@ class GenerateResumeAndCoverLetterView(APIView):
             for response in chat_responses:
                 command = response["command"]
                 markdown = response["markdown"]
-                document = Document.objects.create(
+                document, _ = Document.objects.get_or_create(
                     user=request.user,
                     user_context=user_context,
                     job_description=job_description,
@@ -83,16 +88,20 @@ class UpdateContentView(APIView):
             "document_version_id"
         ].queryset = DocumentVersion.objects.filter(document__user=request.user)
         serializer.is_valid(raise_exception=True)
-        content = serializer.validated_data["content"]
         instructions = serializer.validated_data["instructions"]
-        document = serializer.validated_data["document_version"].document
+        document_version = serializer.validated_data["document_version"]
+        document = document_version.document
         document_type = document.document_type
+        markdown = document_version.markdown
 
         try:
-            markdown = UpdateContent(content, instructions, document_type).execute()
+            # Use the markdown from the document_version (which may be newly created if markdown was provided)
+            markdown_response = UpdateContent(
+                markdown, instructions, document_type
+            ).execute()
             document_version = DocumentVersion.objects.create(
                 document=document,
-                markdown=markdown,
+                markdown=markdown_response,
             )
             serializer = DocumentVersionResponseSerializer(document_version)
             return Response(serializer.data, status=status.HTTP_200_OK)
@@ -102,101 +111,79 @@ class UpdateContentView(APIView):
             )
 
 
-# class DownloadMarkdownView(APIView):
-#     permission_classes = [IsAuthenticated]
+class DownloadMarkdownView(APIView):
+    permission_classes = [IsAuthenticated]
 
-#     def post(self, request):
-#         file_name, job_description, content_type, markdown_content = self.get_context(
-#             request
-#         )
+    def post(self, request):
+        file_name, document_version = self.get_context(request)
+        # Generate PDF
+        try:
+            markdown = document_version.markdown
+            pdf_bytes = DownloadMarkdown(markdown, request).execute()
+            response = HttpResponse(pdf_bytes, content_type="application/pdf")
+            response["Content-Disposition"] = f'attachment; filename="{file_name}.pdf"'
+            # finalize the DocumentVersion
+            document = document_version.document
+            document.final_version = document_version
+            document.save()
+            return response
+        except Exception as e:
+            return Response(
+                {"message": f"Failed to generate PDF: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
 
-#         # If markdown_content not provided, fetch from saved draft
-#         if not markdown_content:
-#             markdown_content = self.get_draft_content(job_description, content_type)
-#             if not markdown_content:
-#                 return Response(
-#                     {
-#                         "message": f"No saved {content_type} found. Please generate or provide content."
-#                     },
-#                     status=status.HTTP_404_NOT_FOUND,
-#                 )
+    def get_context(self, request):
+        serializer = DownloadMarkdownSerializer(data=request.data)
+        serializer.fields[
+            "document_version_id"
+        ].queryset = DocumentVersion.objects.filter(document__user=request.user)
+        serializer.is_valid(raise_exception=True)
+        document_version = serializer.validated_data["document_version"]
+        file_name = serializer.validated_data["file_name"]
 
-#         # Generate PDF
-#         try:
-#             pdf_bytes = DownloadMarkdown(markdown_content, request).execute()
-#             response = HttpResponse(pdf_bytes, content_type="application/pdf")
-#             response["Content-Disposition"] = f'attachment; filename="{file_name}.pdf"'
-#         except Exception as e:
-#             return Response(
-#                 {"message": f"Failed to generate PDF: {str(e)}"},
-#                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-#             )
+        return file_name, document_version
 
-#         # Update Resume/CoverLetter with final content (in case it was edited/overridden)
-#         resume_instance = None
-#         cover_letter_instance = None
 
-#         if content_type == "resume":
-#             resume_instance, _ = Resume.objects.update_or_create(
-#                 user=request.user,
-#                 job_description=job_description,
-#                 defaults={"content": markdown_content},
-#             )
-#         elif content_type == "cover letter":
-#             cover_letter_instance, _ = CoverLetter.objects.update_or_create(
-#                 user=request.user,
-#                 job_description=job_description,
-#                 defaults={"content": markdown_content},
-#             )
+# Document Management
 
-#         # Create/update JobApplication with FK references to Resume/CoverLetter instances
-#         try:
-#             job_application, created = JobApplication.objects.get_or_create(
-#                 user=request.user,
-#                 job_description=job_description,
-#             )
 
-#             # Link Resume and CoverLetter instances to JobApplication
-#             if resume_instance:
-#                 job_application.resume = resume_instance
-#             if cover_letter_instance:
-#                 job_application.cover_letter = cover_letter_instance
+class DocumentViewSet(viewsets.ModelViewSet):
+    permission_classes = [IsAuthenticated]
+    pagination_class = PageNumberPagination
 
-#             job_application.save()
-#         except Exception as e:
-#             return Response(
-#                 {"message": f"Failed to save job application: {str(e)}"},
-#                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-#             )
-#         return response
+    def get_queryset(self):
+        return Document.objects.filter(user=self.request.user)
 
-#     def get_context(self, request):
-#         serializer = DownloadMarkdownSerializer(data=request.data)
-#         serializer.fields[
-#             "job_description_id"
-#         ].queryset = JobDescription.objects.filter(user=request.user)
-#         serializer.is_valid(raise_exception=True)
-#         markdown_content = serializer.validated_data.get("markdown_content", "")
-#         file_name = serializer.validated_data["file_name"]
-#         job_description = serializer.validated_data["job_description"]
-#         content_type = serializer.validated_data["content_type"]
-#         return file_name, job_description, content_type, markdown_content
+    def get_serializer_class(self):
+        if self.action == "list":
+            return DocumentListSerializer
+        return DocumentSerializer
 
-#     def get_draft_content(self, job_description, content_type):
-#         """Fetch saved draft content from Resume/CoverLetter models."""
-#         try:
-#             if content_type == "resume":
-#                 resume = Resume.objects.get(
-#                     user=self.request.user,
-#                     job_description=job_description,
-#                 )
-#                 return resume.content
-#             elif content_type == "cover letter":
-#                 cover_letter = CoverLetter.objects.get(
-#                     user=self.request.user,
-#                     job_description=job_description,
-#                 )
-#                 return cover_letter.content
-#         except (Resume.DoesNotExist, CoverLetter.DoesNotExist):
-#             return None
-#         return None
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
+    def perform_update(self, serializer):
+        serializer.save(user=self.request.user)
+
+    def perform_delete(self, serializer):
+        serializer.delete(user=self.request.user)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class DocumentVersionViewSet(viewsets.ModelViewSet):
+    permission_classes = [IsAuthenticated]
+    pagination_class = PageNumberPagination
+    serializer_class = DocumentVersionSerializer
+
+    def get_queryset(self):
+        queryset = DocumentVersion.objects.filter(
+            document__user=self.request.user
+        ).select_related("document")
+
+        # Filter by document_id if provided
+        document_id = self.request.query_params.get("document", None)
+        if document_id:
+            queryset = queryset.filter(document_id=document_id)
+
+        return queryset

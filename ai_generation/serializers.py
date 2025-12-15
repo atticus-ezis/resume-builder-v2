@@ -12,8 +12,7 @@ class MatchContextSerializer(serializers.Serializer):
         queryset=JobDescription.objects.none(), source="job_description"
     )
     command = serializers.ChoiceField(
-        required=True,
-        multiple_choices=["generate_resume", "generate_cover_letter", "generate_both"],
+        choices=["generate_resume", "generate_cover_letter", "generate_both"],
     )
 
 
@@ -22,33 +21,12 @@ class UpdateContentSerializer(serializers.Serializer):
     document_version_id = serializers.PrimaryKeyRelatedField(
         queryset=DocumentVersion.objects.none(),
         source="document_version",
-        required=False,
-        allow_null=True,
+        required=True,
     )
     instructions = serializers.CharField(required=True)
-    content = serializers.SerializerMethodField()
-
-    def get_content(self, obj):
-        if obj.markdown:
-            return obj.markdown
-        else:
-            return obj.document_version.markdown
 
     def validate(self, val):
-        markdown = val.get("markdown")
-        document_version = val.get("document_version")
-
-        if markdown is not None and document_version is not None:
-            raise serializers.ValidationError(
-                "Either 'markdown' or 'document_version_id' must be provided, but not both."
-            )
-
-        if markdown is None and document_version is None:
-            raise serializers.ValidationError(
-                "Either 'markdown' or 'document_version_id' must be provided."
-            )
-
-        return val
+        return create_new_version_if_needed(val)
 
 
 class DocumentVersionResponseSerializer(serializers.ModelSerializer):
@@ -75,12 +53,80 @@ class DocumentVersionResponseSerializer(serializers.ModelSerializer):
 
 
 class DownloadMarkdownSerializer(serializers.Serializer):
-    markdown_content = serializers.CharField(required=False, allow_blank=True)
     file_name = serializers.CharField(required=True)
-    job_description_id = serializers.PrimaryKeyRelatedField(
-        queryset=JobDescription.objects.none(), source="job_description"
-    )
-    content_type = serializers.ChoiceField(
+    markdown = serializers.CharField(required=False, allow_blank=True)
+    document_version_id = serializers.PrimaryKeyRelatedField(
+        queryset=DocumentVersion.objects.none(),
+        source="document_version",
         required=True,
-        choices=["resume", "cover letter"],
     )
+
+    def validate(self, val):
+        return create_new_version_if_needed(val)
+
+
+def create_new_version_if_needed(val):
+    document_version = val.get("document_version")
+    markdown = val.get("markdown")
+    document = document_version.document
+
+    if not markdown or markdown.strip() == "":
+        return val
+
+    if document_version.markdown.strip() != markdown.strip():
+        create_new_document_version = DocumentVersion.objects.create(
+            document=document,
+            markdown=markdown,
+        )
+        document_version = create_new_document_version
+
+        val["document_version"] = document_version
+
+    return val
+
+
+class DocumentSerializer(serializers.ModelSerializer):
+    content = serializers.SerializerMethodField()
+    draft_count = serializers.SerializerMethodField()
+
+    def get_content(self, obj):
+        if obj.final_version:
+            return obj.final_version.markdown
+        return None
+
+    def get_drafts(self, obj):
+        return obj.versions.count()
+
+    class Meta:
+        model = Document
+        fields = [
+            "id",
+            "job_description",
+            "user_context",
+            "document_type",
+            "content",
+            "draft_count",
+            "created_at",
+        ]
+
+
+class DocumentListSerializer(serializers.ModelSerializer):
+    company_name = serializers.SerializerMethodField()
+    job_position = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Document
+        fields = ["id", "document_type", "company_name", "job_position"]
+
+    def get_company_name(self, obj):
+        return obj.job_description.company_name
+
+    def get_job_position(self, obj):
+        return obj.job_description.job_position
+
+
+class DocumentVersionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DocumentVersion
+        fields = ["id", "document", "version_number", "markdown", "created_at"]
+        read_only_fields = ["id", "version_number", "created_at"]

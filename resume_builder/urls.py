@@ -36,11 +36,17 @@ from ai_generation.views import (
     DownloadMarkdownView,
     GenerateResumeAndCoverLetterView,
     UpdateContentView,
+    DocumentViewSet,
+    DocumentVersionViewSet,
 )
 
 router = DefaultRouter()
 router.register(r"applicant", UserContextViewSet, basename="applicant")
 router.register(r"job", JobDescriptionViewSet, basename="job")
+router.register(r"document", DocumentViewSet, basename="document")
+router.register(
+    r"document-version", DocumentVersionViewSet, basename="document-version"
+)
 
 
 urlpatterns = [
