@@ -1,0 +1,47 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: resume-builder-db
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-resume_builder}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+    env_file:
+      - .env
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-resume_builder}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: resume-builder-web
+    ports:
+      - "8000:8000"
+    volumes:
+      # Mount the entire codebase for live code changes (no rebuild needed)
+      - .:/app
+    environment:
+      - PYTHONUNBUFFERED=1
+      - DB_HOST=db
+    env_file:
+      - .env
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+    # Override the default command to ensure migrations run on startup
+    command: >
+      sh -c "python manage.py migrate &&
+             python manage.py runserver 0.0.0.0:8000"
+
+volumes:
+  postgres_data:

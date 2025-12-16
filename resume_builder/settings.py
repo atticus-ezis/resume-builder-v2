@@ -15,13 +15,10 @@ from pathlib import Path
 import environ
 import os
 import sys
+import dj_database_url
 
 # Set library path for WeasyPrint on macOS
-# This ensures that WeasyPrint can find required system libraries like libgobject-2.0-0
-# WeasyPrint requires Pango and its dependencies which are installed via Homebrew
-# Note: This is only needed on macOS, not in Docker/Linux containers
-if sys.platform == "darwin":  # macOS only
-    # Check for Apple Silicon (M1/M2/M3) Homebrew path first, then Intel Mac path
+if sys.platform == "darwin":
     homebrew_paths = ["/opt/homebrew/lib", "/usr/local/lib"]
     for lib_path in homebrew_paths:
         if os.path.exists(lib_path):
@@ -53,10 +50,13 @@ OPENAI_API_KEY = env.str("OPENAI_API_KEY", "")
 SECRET_KEY = "django-insecure-r1&!0o!v%&y1-2h0*$e%&46(jcxr3k7vdzu7k2yxf^um0e=^8a"
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = env.bool("DEBUG", default=True)
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=["0.0.0.0"])
 
+CORS_ALLOWED_ORIGINS = env.list(
+    "CORS_ALLOWED_ORIGINS", default=["http://localhost:3000"]
+)
 
 # Application definition
 
@@ -182,12 +182,27 @@ WSGI_APPLICATION = "resume_builder.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+db_url = env.str("DATABASE_URL", default=None)
+if db_url:
+    db_config = dj_database_url.parse(db_url, conn_max_age=600)
+    db_config["OPTIONS"] = {
+        "sslmode": "require",
     }
-}
+    DATABASES = {
+        "default": db_config,
+    }
+else:
+    # Default to PostgreSQL
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": env.str("POSTGRES_DB", default="resume_builder"),
+            "USER": env.str("POSTGRES_USER", default="postgres"),
+            "PASSWORD": env.str("POSTGRES_PASSWORD", default="postgres"),
+            "HOST": env.str("DB_HOST", default="127.0.0.1"),
+            "PORT": env.str("DB_PORT", default="5432"),
+        }
+    }
 
 
 # Password validation
