@@ -17,7 +17,11 @@ Including another URLconf
 
 from django.contrib import admin
 from django.urls import path, include
-from accounts.views import CustomPasswordResetConfirmView, CustomVerifyEmailView
+from accounts.views import (
+    CustomPasswordResetConfirmView,
+    CustomVerifyEmailView,
+    CustomRegisterView,
+)
 from dj_rest_auth.views import (
     PasswordResetView,
     PasswordChangeView,
@@ -52,6 +56,9 @@ router.register(
 urlpatterns = [
     path("admin/", admin.site.urls),
     # path("applicant/", include("applicant_profile.urls")),
+    path(
+        "accounts/", include("allauth.account.urls")
+    ),  # Required for account_confirm_email URL name
     path("accounts/social/", include("allauth.socialaccount.urls")),
     path(
         "api/",
@@ -64,7 +71,7 @@ urlpatterns = [
                             # registration / confirm email
                             path(
                                 "registration/",
-                                RegisterView.as_view(),
+                                CustomRegisterView.as_view(),
                                 name="register",
                             ),
                             path(

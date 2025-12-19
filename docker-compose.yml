@@ -3,7 +3,7 @@ services:
     image: postgres:16-alpine
     container_name: resume-builder-db
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-resume_builder}
+      POSTGRES_DB: ${POSTGRES_DB:-resumebuilder}
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
     env_file:
@@ -14,7 +14,7 @@ services:
       - "${DB_PORT:-5432}:5432"
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-resume_builder}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-resumebuilder}"]
       interval: 5s
       timeout: 5s
       retries: 5

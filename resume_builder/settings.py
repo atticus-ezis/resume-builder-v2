@@ -47,16 +47,19 @@ OPENAI_API_KEY = env.str("OPENAI_API_KEY", "")
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-r1&!0o!v%&y1-2h0*$e%&46(jcxr3k7vdzu7k2yxf^um0e=^8a"
+SECRET_KEY = env.str(
+    "SECRET_KEY", "django-insecure-r1&!0o!v%&y1-2h0*$e%&46(jcxr3k7vdzu7k2yxf^um0e=^8a"
+)
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env.bool("DEBUG", default=True)
 
-ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=["0.0.0.0"])
+ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=["0.0.0.0", "localhost", "127.0.0.1"])
 
 CORS_ALLOWED_ORIGINS = env.list(
     "CORS_ALLOWED_ORIGINS", default=["http://localhost:3000"]
 )
+CORS_ALLOW_CREDENTIALS = True  # Required for JWT cookies
 
 # Application definition
 
@@ -68,8 +71,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     #
-    "PyPDF2",
-    #
+    "corsheaders",
     "django.contrib.sites",
     # account
     "allauth",
@@ -123,7 +125,7 @@ ACCOUNT_SIGNUP_FIELDS = ["email*", "password1*", "password2*"]
 ACCOUNT_USERNAME_REQUIRED = False
 ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_UNIQUE_EMAIL = True
-ACCOUNT_EMAIL_VERIFICATION = "mandatory"
+ACCOUNT_EMAIL_VERIFICATION = "optional"
 # ACCOUNT_CONFIRM_EMAIL_ON_GET = False
 ACCOUNT_ADAPTER = "accounts.adapters.CustomAccountAdapter"
 
@@ -141,6 +143,7 @@ EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",

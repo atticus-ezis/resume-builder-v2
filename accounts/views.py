@@ -1,6 +1,5 @@
 import logging
 
-from dj_rest_auth.views import sensitive_post_parameters_m
 from rest_framework import status
 from rest_framework.response import Response
 from dj_rest_auth.serializers import PasswordResetConfirmSerializer
@@ -10,7 +9,10 @@ from django.utils.translation import gettext_lazy as _
 from django.views.decorators.debug import sensitive_post_parameters
 from django.utils.decorators import method_decorator
 from dj_rest_auth.jwt_auth import set_jwt_cookies
-from dj_rest_auth.registration.views import VerifyEmailView as DjRestVerifyEmailView
+from dj_rest_auth.registration.views import (
+    VerifyEmailView as DjRestVerifyEmailView,
+    RegisterView,
+)
 from rest_framework_simplejwt.tokens import RefreshToken
 
 logger = logging.getLogger(__name__)
@@ -25,6 +27,29 @@ sensitive_post_parameters_m = method_decorator(
 )
 
 # Create your views here.
+
+
+class CustomRegisterView(RegisterView):
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        data = self.get_response_data(user)
+        access = data.pop("access")
+        refresh = data.pop("refresh")
+
+        if data:
+            response = Response(
+                data,
+                status=status.HTTP_201_CREATED,
+                headers=headers,
+            )
+            set_jwt_cookies(response, access, refresh)
+        else:
+            response = Response(status=status.HTTP_204_NO_CONTENT, headers=headers)
+
+        return response
 
 
 class CustomVerifyEmailView(DjRestVerifyEmailView):

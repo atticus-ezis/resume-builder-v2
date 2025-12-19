@@ -13,6 +13,24 @@ class TestUserRegistration:
     def client(self):
         return APIClient()
 
+    def test_registration_success(self, registration_url):
+        response = APIClient().post(
+            registration_url,
+            {
+                "username": "testuser",
+                "email": "test@example.com",
+                "password1": "testpassword",
+                "password2": "testpassword",
+            },
+        )
+        assert response.status_code == 201, (
+            f"expected 201 but got {response.status_code}"
+        )
+        assert response.cookies.get("access_token") is not None, "missing access token"
+        assert response.cookies.get("refresh_token") is not None, (
+            "missing refresh token"
+        )
+
     def test_confirm_email_verification(self, confirm_email_verification_url):
         user = UserFactory()
         email_verification_token = generate_email_verification_token(user.email)
