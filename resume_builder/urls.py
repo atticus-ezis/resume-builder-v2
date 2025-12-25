@@ -17,6 +17,9 @@ Including another URLconf
 
 from django.contrib import admin
 from django.urls import path, include
+from rest_framework.response import Response
+from rest_framework.decorators import api_view
+from rest_framework import status
 from accounts.views import (
     CustomPasswordResetConfirmView,
     CustomVerifyEmailView,
@@ -31,7 +34,7 @@ from dj_rest_auth.views import (
 )
 from rest_framework_simplejwt.views import TokenVerifyView
 from dj_rest_auth.jwt_auth import get_refresh_view
-from dj_rest_auth.registration.views import ResendEmailVerificationView, RegisterView
+from dj_rest_auth.registration.views import ResendEmailVerificationView
 from django.views.generic import TemplateView
 from rest_framework.routers import DefaultRouter
 from applicant_profile.views import UserContextViewSet
@@ -53,6 +56,14 @@ router.register(
 )
 
 
+@api_view(["GET"])
+def validate_user(request):
+    user = request.user
+    if user.is_authenticated:
+        return Response(status=status.HTTP_200_OK)
+    return Response(status=status.HTTP_401_UNAUTHORIZED)
+
+
 urlpatterns = [
     path("admin/", admin.site.urls),
     # path("applicant/", include("applicant_profile.urls")),
@@ -60,6 +71,7 @@ urlpatterns = [
         "accounts/", include("allauth.account.urls")
     ),  # Required for account_confirm_email URL name
     path("accounts/social/", include("allauth.socialaccount.urls")),
+    path("validate-user/", validate_user, name="validate_user"),
     path(
         "api/",
         include(

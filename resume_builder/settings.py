@@ -61,6 +61,10 @@ CORS_ALLOWED_ORIGINS = env.list(
 )
 CORS_ALLOW_CREDENTIALS = True  # Required for JWT cookies
 
+CSRF_TRUSTED_ORIGINS = env.list(
+    "CSRF_TRUSTED_ORIGINS", default=["http://localhost:3000"]
+)
+
 
 # Application definition
 
