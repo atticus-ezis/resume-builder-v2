@@ -25,6 +25,7 @@ from accounts.views import (
     # CustomPasswordResetConfirmView,
     # CustomRegisterView,
     CustomVerifyEmailView,
+    CSRFExemptLoginView,
 )
 from dj_rest_auth.views import (
     PasswordResetView,
@@ -79,7 +80,6 @@ urlpatterns = [
         "accounts/", include("allauth.account.urls")
     ),  # Required for account_confirm_email URL name
     path("accounts/social/", include("allauth.socialaccount.urls")),
-    path("api/validate-user/", validate_user, name="validate_user"),
     path(
         "api/",
         include(
@@ -88,6 +88,7 @@ urlpatterns = [
                     "accounts/",
                     include(
                         [
+                            path("validate-user/", validate_user, name="validate_user"),
                             # registration / confirm email
                             path(
                                 "registration/",
@@ -110,8 +111,12 @@ urlpatterns = [
                             #     name="custom_verify_email",
                             # ),
                             # basic
-                            path("login/", LoginView.as_view(), name="login"),
-                            path("logout/", LogoutView.as_view(), name="logout"),
+                            # path("login/", LoginView.as_view(), name="login"),
+                            path(
+                                "login/",
+                                CSRFExemptLoginView.as_view(),
+                                name="login",
+                            ),
                             path(
                                 "user/", UserDetailsView.as_view(), name="user_details"
                             ),

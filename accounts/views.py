@@ -9,6 +9,8 @@ from django.utils.translation import gettext_lazy as _
 from django.views.decorators.debug import sensitive_post_parameters
 from django.utils.decorators import method_decorator
 from dj_rest_auth.jwt_auth import set_jwt_cookies
+from dj_rest_auth.views import LoginView
+from django.views.decorators.csrf import csrf_exempt
 from dj_rest_auth.registration.views import (
     VerifyEmailView as DjRestVerifyEmailView,
     RegisterView,
@@ -50,6 +52,19 @@ sensitive_post_parameters_m = method_decorator(
 #             response = Response(status=status.HTTP_204_NO_CONTENT, headers=headers)
 
 #         return response
+
+
+class CSRFExemptLoginView(LoginView):
+    """
+    Login view with CSRF exemption for REST API usage.
+    This allows login without CSRF tokens while keeping CSRF protection for other endpoints.
+    """
+    permission_classes = [AllowAny]  # Explicitly allow unauthenticated access
+    authentication_classes = []  # Disable authentication for login endpoint
+    
+    @method_decorator(csrf_exempt)
+    def dispatch(self, *args, **kwargs):
+        return super().dispatch(*args, **kwargs)
 
 
 class CustomVerifyEmailView(DjRestVerifyEmailView):

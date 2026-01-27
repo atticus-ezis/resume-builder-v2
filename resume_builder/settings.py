@@ -56,10 +56,10 @@ DEBUG = env.bool("DEBUG", default=True)
 
 ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=["0.0.0.0", "localhost", "127.0.0.1"])
 
-CORS_ALLOWED_ORIGINS = [FRONTEND_DOMAIN]
+CORS_ALLOWED_ORIGINS = [FRONTEND_DOMAIN, "http://localhost:3000"]
 CORS_ALLOW_CREDENTIALS = True  # Required for JWT cookies
 
-CSRF_TRUSTED_ORIGINS = [FRONTEND_DOMAIN]
+CSRF_TRUSTED_ORIGINS = [FRONTEND_DOMAIN, "http://localhost:3000"]
 
 
 # Application definition
@@ -101,7 +101,6 @@ SITE_ID = 1
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "dj_rest_auth.jwt_auth.JWTCookieAuthentication",
-        # "rest_framework_simplejwt.authentication.JWTAuthentication",
     ),
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }
@@ -126,6 +125,7 @@ REST_AUTH = {
     "JWT_AUTH_COOKIE": "access_token",
     "JWT_AUTH_REFRESH_COOKIE": "refresh_token",
     "REGISTER_SERIALIZER": "accounts.serializers.CustomRegisterSerializer",
+    "SESSION_LOGIN": False,
 }
 
 SPECTACULAR_SETTINGS = {
@@ -161,6 +161,8 @@ MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
+    # Custom middleware to exempt login
+    "resume_builder.middleware.CSRFExemptAPILoginMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
