@@ -20,18 +20,21 @@ from django.urls import path, include
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from rest_framework import status
+
 from accounts.views import (
-    CustomPasswordResetConfirmView,
+    # CustomPasswordResetConfirmView,
+    # CustomRegisterView,
     CustomVerifyEmailView,
-    CustomRegisterView,
 )
 from dj_rest_auth.views import (
     PasswordResetView,
     PasswordChangeView,
+    PasswordResetConfirmView,
     LoginView,
     LogoutView,
     UserDetailsView,
 )
+from dj_rest_auth.registration.views import RegisterView, VerifyEmailView
 from rest_framework_simplejwt.views import TokenVerifyView
 from dj_rest_auth.jwt_auth import get_refresh_view
 from dj_rest_auth.registration.views import ResendEmailVerificationView
@@ -45,6 +48,11 @@ from ai_generation.views import (
     UpdateContentView,
     DocumentViewSet,
     DocumentVersionViewSet,
+)
+from drf_spectacular.views import (
+    SpectacularAPIView,
+    SpectacularSwaggerView,
+    SpectacularRedocView,
 )
 
 router = DefaultRouter()
@@ -71,7 +79,7 @@ urlpatterns = [
         "accounts/", include("allauth.account.urls")
     ),  # Required for account_confirm_email URL name
     path("accounts/social/", include("allauth.socialaccount.urls")),
-    path("validate-user/", validate_user, name="validate_user"),
+    path("api/validate-user/", validate_user, name="validate_user"),
     path(
         "api/",
         include(
@@ -83,7 +91,7 @@ urlpatterns = [
                             # registration / confirm email
                             path(
                                 "registration/",
-                                CustomRegisterView.as_view(),
+                                RegisterView.as_view(),
                                 name="register",
                             ),
                             path(
@@ -96,6 +104,11 @@ urlpatterns = [
                                 CustomVerifyEmailView.as_view(),
                                 name="custom_verify_email",
                             ),
+                            # path(
+                            #     "registration/verify-email/",  # requires session ID cookie
+                            #     VerifyEmailView.as_view(),
+                            #     name="custom_verify_email",
+                            # ),
                             # basic
                             path("login/", LoginView.as_view(), name="login"),
                             path("logout/", LogoutView.as_view(), name="logout"),
@@ -127,7 +140,7 @@ urlpatterns = [
                             ),
                             path(
                                 "password/reset/confirm/",
-                                CustomPasswordResetConfirmView.as_view(),
+                                PasswordResetConfirmView.as_view(),
                                 name="custom_password_reset_confirm",
                             ),
                             path(
@@ -138,24 +151,13 @@ urlpatterns = [
                         ]
                     ),
                 ),
-                path("context/", include(router.urls)),
                 path(
-                    "get-resume-and-cover-letter/",
+                    "generate-resume-and-cover-letter/",
                     GenerateResumeAndCoverLetterView.as_view(),
-                    name="get_resume_and_cover_letter",
+                    name="generate_resume_and_cover_letter",
                 ),
                 path(
                     "update-content/",
-                    UpdateContentView.as_view(),
-                    name="update_content",
-                ),
-                path(
-                    "ai-call/",
-                    GenerateResumeAndCoverLetterView.as_view(),
-                    name="ai_call",
-                ),
-                path(
-                    "ai-call/update-content/",
                     UpdateContentView.as_view(),
                     name="update_content",
                 ),
@@ -164,7 +166,15 @@ urlpatterns = [
                     DownloadMarkdownView.as_view(),
                     name="download_content",
                 ),
+                path("", include(router.urls)),
             ]
         ),
     ),
+    path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
+    path(
+        "api/docs/",
+        SpectacularSwaggerView.as_view(url_name="schema"),
+        name="swagger-ui",
+    ),
+    path("api/redoc/", SpectacularRedocView.as_view(url_name="schema"), name="redoc"),
 ]

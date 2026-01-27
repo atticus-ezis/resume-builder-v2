@@ -29,95 +29,99 @@ sensitive_post_parameters_m = method_decorator(
 # Create your views here.
 
 
-class CustomRegisterView(RegisterView):
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        user = self.perform_create(serializer)
-        headers = self.get_success_headers(serializer.data)
-        data = self.get_response_data(user)
-        access = data.pop("access")
-        refresh = data.pop("refresh")
+# class CustomRegisterView(RegisterView):
+#     def create(self, request, *args, **kwargs):
+#         serializer = self.get_serializer(data=request.data)
+#         serializer.is_valid(raise_exception=True)
+#         user = self.perform_create(serializer)
+#         headers = self.get_success_headers(serializer.data)
+#         data = self.get_response_data(user)
+#         access = data.pop("access")
+#         refresh = data.pop("refresh")
 
-        if data:
-            response = Response(
-                data,
-                status=status.HTTP_201_CREATED,
-                headers=headers,
-            )
-            set_jwt_cookies(response, access, refresh)
-        else:
-            response = Response(status=status.HTTP_204_NO_CONTENT, headers=headers)
+#         if data:
+#             response = Response(
+#                 data,
+#                 status=status.HTTP_201_CREATED,
+#                 headers=headers,
+#             )
+#             set_jwt_cookies(response, access, refresh)
+#         else:
+#             response = Response(status=status.HTTP_204_NO_CONTENT, headers=headers)
 
-        return response
+#         return response
 
 
 class CustomVerifyEmailView(DjRestVerifyEmailView):
-    def get_object(self):
-        obj = super().get_object()
-        self.user = obj.email_address.user
-        return obj
-
-    def post(self, request, *args, **kwargs):
-        response = super().post(request, *args, **kwargs)
-        try:
-            refresh = RefreshToken.for_user(self.user)
-            access_token = str(refresh.access_token)
-            refresh_token = str(refresh)
-            set_jwt_cookies(response, access_token, refresh_token)
-            response.data["logged_in"] = True
-
-        except Exception:
-            logger.exception(
-                "Failed to create/set JWT tokens after email verification for user %s",
-            )
-            response.data["logged_in"] = False
-
-        return response
+    permission_classes = [AllowAny]
+    authentication_classes = []
 
 
-class CustomPasswordResetConfirmView(GenericAPIView):
-    """
-    Password reset e-mail link is confirmed, therefore
-    this resets the user's password.
+#     def get_object(self):
+#         obj = super().get_object()
+#         self.user = obj.email_address.user
+#         return obj
 
-    Accepts the following POST parameters: token, uid,
-        new_password1, new_password2
-    Returns the success/fail message.
-    """
+#     def post(self, request, *args, **kwargs):
+#         response = super().post(request, *args, **kwargs)
+#         try:
+#             refresh = RefreshToken.for_user(self.user)
+#             access_token = str(refresh.access_token)
+#             refresh_token = str(refresh)
+#             set_jwt_cookies(response, access_token, refresh_token)
+#             response.data["logged_in"] = True
 
-    serializer_class = PasswordResetConfirmSerializer
-    permission_classes = (AllowAny,)
-    throttle_scope = "dj_rest_auth"
+#         except Exception:
+#             logger.exception(
+#                 "Failed to create/set JWT tokens after email verification for user %s",
+#             )
+#             response.data["logged_in"] = False
 
-    @sensitive_post_parameters_m
-    def dispatch(self, *args, **kwargs):
-        return super().dispatch(*args, **kwargs)
+#         return response
 
-    def post(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
 
-        user = serializer.user
+# class CustomPasswordResetConfirmView(GenericAPIView):
+#     """
+#     Password reset e-mail link is confirmed, therefore
+#     this resets the user's password.
 
-        response = Response(
-            {"detail": _("Password has been reset.")},
-            status=status.HTTP_200_OK,
-        )
+#     Accepts the following POST parameters: token, uid,
+#         new_password1, new_password2
+#     Returns the success/fail message.
+#     """
 
-        try:
-            refresh = RefreshToken.for_user(user)
-            access_token = str(refresh.access_token)
-            refresh_token = str(refresh)
+#     serializer_class = PasswordResetConfirmSerializer
+#     permission_classes = (AllowAny,)
+#     throttle_scope = "dj_rest_auth"
 
-            set_jwt_cookies(response, access_token, refresh_token)
-            response.data["logged_in"] = True
-        except Exception:
-            logger.exception(
-                "Failed to create/set JWT tokens after password reset confirm for user %s",
-                user.id if user else "unknown",
-            )
-            response.data["logged_in"] = False
+#     @sensitive_post_parameters_m
+#     def dispatch(self, *args, **kwargs):
+#         return super().dispatch(*args, **kwargs)
 
-        return response
+#     def post(self, request, *args, **kwargs):
+#         serializer = self.get_serializer(data=request.data)
+#         serializer.is_valid(raise_exception=True)
+#         serializer.save()
+
+#         user = serializer.user
+
+#         response = Response(
+#             {"detail": _("Password has been reset.")},
+#             status=status.HTTP_200_OK,
+#         )
+
+#         try:
+#             refresh = RefreshToken.for_user(user)
+#             access_token = str(refresh.access_token)
+#             refresh_token = str(refresh)
+
+#             set_jwt_cookies(response, access_token, refresh_token)
+#             response.data["logged_in"] = True
+#         except Exception:
+#             logger.exception(
+#                 "Failed to create/set JWT tokens after password reset confirm for user %s",
+#                 user.id if user else "unknown",
+#             )
+#             response.data["logged_in"] = False
+
+#         return response

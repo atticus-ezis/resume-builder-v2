@@ -56,14 +56,10 @@ DEBUG = env.bool("DEBUG", default=True)
 
 ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=["0.0.0.0", "localhost", "127.0.0.1"])
 
-CORS_ALLOWED_ORIGINS = env.list(
-    "CORS_ALLOWED_ORIGINS", default=["http://localhost:3000"]
-)
+CORS_ALLOWED_ORIGINS = [FRONTEND_DOMAIN]
 CORS_ALLOW_CREDENTIALS = True  # Required for JWT cookies
 
-CSRF_TRUSTED_ORIGINS = env.list(
-    "CSRF_TRUSTED_ORIGINS", default=["http://localhost:3000"]
-)
+CSRF_TRUSTED_ORIGINS = [FRONTEND_DOMAIN]
 
 
 # Application definition
@@ -94,6 +90,8 @@ INSTALLED_APPS = [
     "applicant_profile",
     "job_profile",
     "ai_generation",
+    # third party
+    "drf_spectacular",
 ]
 
 # for allauth
@@ -103,8 +101,9 @@ SITE_ID = 1
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "dj_rest_auth.jwt_auth.JWTCookieAuthentication",
-        "rest_framework_simplejwt.authentication.JWTAuthentication",
+        # "rest_framework_simplejwt.authentication.JWTAuthentication",
     ),
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }
 
 SIMPLE_JWT = {
@@ -122,21 +121,30 @@ REST_AUTH = {
     # correct?
     "JWT_AUTH_SAMESITE": env.str(
         "JWT_AUTH_SAMESITE", "Lax"
-    ),  # keep lax if domains match for development, else none
+    ),  # keep lax if domains match, else none
     "JWT_AUTH_SECURE": not DEBUG,
     "JWT_AUTH_COOKIE": "access_token",
     "JWT_AUTH_REFRESH_COOKIE": "refresh_token",
+    "REGISTER_SERIALIZER": "accounts.serializers.CustomRegisterSerializer",
+}
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "Resume Builder API",
+    "DESCRIPTION": "API documentation for Resume Builder application",
+    "VERSION": "1.0.0",
+    "SERVE_INCLUDE_SCHEMA": False,
+    "COMPONENT_SPLIT_REQUEST": True,
+    "AUTHENTICATION_WHITELIST": [
+        "dj_rest_auth.jwt_auth.JWTCookieAuthentication",
+    ],
 }
 
 # allauth config
 ACCOUNT_SIGNUP_FIELDS = ["email*", "password1*", "password2*"]
-ACCOUNT_USERNAME_REQUIRED = False
-ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_LOGIN_METHODS = {"email"}
 ACCOUNT_UNIQUE_EMAIL = True
-ACCOUNT_EMAIL_VERIFICATION = "optional"
-# ACCOUNT_CONFIRM_EMAIL_ON_GET = False
+ACCOUNT_EMAIL_VERIFICATION = "mandatory"
 ACCOUNT_ADAPTER = "accounts.adapters.CustomAccountAdapter"
-
 ACCOUNT_DEFAULT_HTTP_PROTOCOL = env.str("HTTP_PROTOCOL", "http")
 
 # ACCOUNT_EMAIL_CONFIRMATION_ANONYMOUS_REDIRECT_URL = env.str("EMAIL_REDIRECT")
@@ -144,7 +152,6 @@ ACCOUNT_DEFAULT_HTTP_PROTOCOL = env.str("HTTP_PROTOCOL", "http")
 
 
 ACCOUNT_PASSWORD_RESET_EXPIRE_DAYS = 1
-ACCOUNT_DEFAULT_HTTP_PROTOCOL = "http"  # need to adjust for prod
 
 
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"

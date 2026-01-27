@@ -163,13 +163,6 @@ class DocumentViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
 
-    def perform_update(self, serializer):
-        serializer.save(user=self.request.user)
-
-    def perform_delete(self, serializer):
-        serializer.delete(user=self.request.user)
-        return Response(status=status.HTTP_204_NO_CONTENT)
-
 
 class DocumentVersionViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
