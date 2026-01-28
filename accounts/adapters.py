@@ -8,7 +8,7 @@ class CustomAccountAdapter(DefaultAccountAdapter):
             if "key" in context:
                 key = context["key"]
                 context["activate_url"] = (
-                    f"{settings.FRONTEND_DOMAIN}/users/email/verify/{key}"
+                    f"{settings.FRONTEND_DOMAIN}/account/register/verify-email/{key}"
                 )
 
         if "password_reset_key" in template_prefix:

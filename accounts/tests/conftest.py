@@ -24,6 +24,11 @@ def django_test_settings(settings):
 
 
 @pytest.fixture
+def login_url():
+    return reverse("login")
+
+
+@pytest.fixture
 def registration_url():
     return reverse("register")
 

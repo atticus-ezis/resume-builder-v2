@@ -25,6 +25,7 @@ class JobDescriptionSerializer(serializers.ModelSerializer):
         job_context = val.get("job_context")
         if job_context:
             val["job_position"] = job_context["job_position"]
+            val["company_name"] = job_context["company_name"]
         return val
 
     class Meta:
@@ -32,12 +33,18 @@ class JobDescriptionSerializer(serializers.ModelSerializer):
         fields = [
             "id",
             "company_name",
-            "job_context",
             "job_position",
+            "job_context",
             "created_at",
             "updated_at",
         ]
-        read_only_fields = ["id", "created_at", "updated_at"]
+        read_only_fields = [
+            "id",
+            "created_at",
+            "updated_at",
+            "company_name",
+            "job_position",
+        ]
 
 
 class JobDescriptionListSerializer(serializers.ModelSerializer):

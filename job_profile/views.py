@@ -4,16 +4,15 @@ from job_profile.serializers import (
     JobDescriptionListSerializer,
 )
 from rest_framework import viewsets
-from rest_framework.pagination import PageNumberPagination
+from resume_builder.pagination import CustomPageNumberPagination
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
 
 
 class JobDescriptionViewSet(viewsets.ModelViewSet):
-    serializer_class = JobDescriptionSerializer
     permission_classes = [IsAuthenticated]
-    pagination_class = PageNumberPagination
+    pagination_class = CustomPageNumberPagination
 
     def get_serializer_class(self):
         if self.action == "list":

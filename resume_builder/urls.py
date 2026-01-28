@@ -69,7 +69,9 @@ router.register(
 def validate_user(request):
     user = request.user
     if user.is_authenticated:
-        return Response(status=status.HTTP_200_OK)
+        return Response(
+            status=status.HTTP_200_OK, data={"email": user.email, "id": user.pk}
+        )
     return Response(status=status.HTTP_401_UNAUTHORIZED)
 
 
