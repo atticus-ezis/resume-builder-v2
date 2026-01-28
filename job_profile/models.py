@@ -4,7 +4,7 @@ from django.contrib.auth.models import User
 
 # Job Description Model
 class JobDescription(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="job_apps")
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="jobs")
     company_name = models.CharField(max_length=255)
     job_position = models.CharField(max_length=255)
     job_context = models.JSONField()

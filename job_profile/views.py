@@ -13,6 +13,7 @@ from rest_framework import status
 class JobDescriptionViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     pagination_class = CustomPageNumberPagination
+    ordering = ["-updated_at"]
 
     def get_serializer_class(self):
         if self.action == "list":
