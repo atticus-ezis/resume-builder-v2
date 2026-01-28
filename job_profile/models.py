@@ -12,4 +12,4 @@ class JobDescription(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return self.company_name, self.job_position
+        return f"{self.company_name} - {self.job_position}"
