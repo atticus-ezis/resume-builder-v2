@@ -1,9 +1,7 @@
-# Build stage
-FROM python:3.13-slim AS builder
+# Build stage: use uv's Python image so uv is pre-installed (avoids COPY path issues)
+FROM ghcr.io/astral-sh/uv:python3.13-bookworm-slim AS builder
 
-ENV PIP_NO_CACHE_DIR=1
-
-# Install build dependencies
+# Install build dependencies (for WeasyPrint etc.)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
     python3-dev \
@@ -14,16 +12,19 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /app
 COPY pyproject.toml ./
-RUN pip install uv && uv pip install --system -r pyproject.toml
+ENV UV_NO_DEV=1
+# Install dependencies only first (better layer caching)
+RUN uv sync --no-install-project
+COPY . .
+RUN uv sync
 
 # Runtime stage
 FROM python:3.13-slim
 
-# Set environment variables
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1
 
-# Install only runtime dependencies for WeasyPrint
+# Runtime dependencies for WeasyPrint
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libpango-1.0-0 \
     libpangoft2-1.0-0 \
@@ -35,9 +36,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     fonts-dejavu-core \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy Python packages from builder
-COPY --from=builder /usr/local/lib/python3.13/site-packages /usr/local/lib/python3.13/site-packages
-COPY --from=builder /usr/local/bin /usr/local/bin
+# Use the venv from builder (uv sync creates .venv, not system site-packages)
+COPY --from=builder /app/.venv /app/.venv
+ENV PATH="/app/.venv/bin:$PATH"
 
 WORKDIR /app
 COPY . .

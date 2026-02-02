@@ -23,10 +23,14 @@ class UpdateContentSerializer(serializers.Serializer):
         source="document_version",
         required=True,
     )
-    instructions = serializers.CharField(required=True)
+    instructions = serializers.CharField(required=False, allow_null=True)
 
     def validate(self, val):
-        return create_new_version_if_needed(val)
+        if not val.get("instructions") and not val.get("markdown"):
+            raise serializers.ValidationError(
+                "Either instructions or markdown must be provided"
+            )
+        return val
 
 
 class DocumentVersionResponseSerializer(serializers.ModelSerializer):

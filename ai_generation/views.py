@@ -34,28 +34,41 @@ class GenerateResumeAndCoverLetterView(APIView):
             return Response(
                 {"message": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
-        try:
-            responses = []
-            for response in chat_responses:
-                command = response["command"]
-                markdown = response["markdown"]
-                document, _ = Document.objects.get_or_create(
-                    user=request.user,
-                    user_context=user_context,
-                    job_description=job_description,
-                    document_type=command,
-                )
-                document_version = DocumentVersion.objects.create(
-                    document=document,
-                    markdown=markdown,
-                )
-                serializer = DocumentVersionResponseSerializer(document_version)
-                responses.append(serializer.data)
-            return Response(responses, status=status.HTTP_200_OK)
-        except Exception as e:
-            return Response(
-                {"message": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+        pretend_response = [
+            {
+                "markdown": "test resume hello world",
+                "document": {"id": 1, "type": "resume"},
+                "document_version": {"id": 1, "version": 1},
+            },
+            {
+                "markdown": "test cover letter hello mrs hiring manager",
+                "document": {"id": 1, "type": "cover_letter"},
+                "document_version": {"id": 1, "version": 1},
+            },
+        ]
+        return Response(pretend_response, status=status.HTTP_200_OK)
+        # try:
+        #     responses = []
+        #     for response in chat_responses:
+        #         command = response["command"]
+        #         markdown = response["markdown"]
+        #         document, _ = Document.objects.get_or_create(
+        #             user=request.user,
+        #             user_context=user_context,
+        #             job_description=job_description,
+        #             document_type=command,
+        #         )
+        #         document_version = DocumentVersion.objects.create(
+        #             document=document,
+        #             markdown=markdown,
+        #         )
+        #         serializer = DocumentVersionResponseSerializer(document_version)
+        #         responses.append(serializer.data)
+        #     return Response(responses, status=status.HTTP_200_OK)
+        # except Exception as e:
+        #     return Response(
+        #         {"message": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        #     )
 
     def get_context(self, request):
         # extract data
@@ -72,7 +85,6 @@ class GenerateResumeAndCoverLetterView(APIView):
 
         user_context = serializer.validated_data["user_context"]
         job_description = serializer.validated_data["job_description"]
-
         command = serializer.validated_data["command"]
 
         return user_context, job_description, command
@@ -83,22 +95,28 @@ class UpdateContentView(APIView):
 
     def post(self, request):
         serializer = UpdateContentSerializer(data=request.data)
-
         serializer.fields[
             "document_version_id"
         ].queryset = DocumentVersion.objects.filter(document__user=request.user)
         serializer.is_valid(raise_exception=True)
-        instructions = serializer.validated_data["instructions"]
+
         document_version = serializer.validated_data["document_version"]
+        markdown = (
+            serializer.validated_data.get("markdown") or document_version.markdown
+        )
+        instructions = serializer.validated_data.get("instructions") or None
+
         document = document_version.document
         document_type = document.document_type
-        markdown = document_version.markdown
 
         try:
-            # Use the markdown from the document_version (which may be newly created if markdown was provided)
-            markdown_response = UpdateContent(
-                markdown, instructions, document_type
-            ).execute()
+            if instructions:
+                markdown_response = UpdateContent(
+                    markdown, instructions, document_type
+                ).execute()
+            else:
+                # No instructions → use provided markdown (serializer ensures it's present)
+                markdown_response = markdown
             document_version = DocumentVersion.objects.create(
                 document=document,
                 markdown=markdown_response,

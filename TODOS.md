@@ -1,6 +1,11 @@
+Important Checks:
+make sure the same generation doesn't occur twice. If the combination of job and application exist, search for an existing document before regenerating.
+
 When Deploying:
 Change the site domain instead of "example.com" to the actual frontend domain
-Change the Registration view to set cookies.
+
+To Optimize:
+Figure out a way to make the homepage load quicker. Add redis. Consider submitting and saving one large request instead of three. Compare results.
 
 # created test user
 

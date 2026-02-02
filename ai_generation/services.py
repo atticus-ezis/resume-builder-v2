@@ -7,8 +7,6 @@ from weasyprint import HTML
 import markdown
 from django.template.loader import render_to_string
 
-# mark
-
 
 command_reference = {
     "generate_resume": ["resume"],
@@ -91,15 +89,15 @@ class APICall:
 
     def execute(self):
         prompts = self.generate_prompt_and_role_description()
-        responses = []
-        for command, prompt, role_description in prompts:
-            response = api_call(self.client, role_description, prompt)
-            if response is None:
-                raise Exception(
-                    f"Failed to generate {command}: API call returned no response"
-                )
-            responses.append({"command": command, "markdown": response})
-        return responses
+        # responses = []
+        # for command, prompt, role_description in prompts:
+        #     response = api_call(self.client, role_description, prompt)
+        #     if response is None:
+        #         raise Exception(
+        #             f"Failed to generate {command}: API call returned no response"
+        #         )
+        #     responses.append({"command": command, "markdown": response})
+        return prompts
 
 
 class UpdateContent:

@@ -37,6 +37,7 @@ class JobDescriptionSerializer(serializers.ModelSerializer):
             "job_context",
             "created_at",
             "updated_at",
+            "user",
         ]
         read_only_fields = [
             "id",
@@ -44,6 +45,7 @@ class JobDescriptionSerializer(serializers.ModelSerializer):
             "updated_at",
             "company_name",
             "job_position",
+            "user",
         ]
 
 

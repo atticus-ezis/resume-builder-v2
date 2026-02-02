@@ -39,7 +39,7 @@ class UserContextViewSet(viewsets.ModelViewSet):
         serializer.delete(user=self.request.user)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-    @action(detail=False, methods=["post"], name="upload-pdf")
+    @action(detail=False, methods=["post"], name="upload-pdf", url_path="upload-pdf")
     def upload_pdf(self, request):
         serializer = FileUploadSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -57,7 +57,9 @@ class UserContextViewSet(viewsets.ModelViewSet):
         return Response(
             {
                 "message": "PDF file uploaded successfully",
-                "user_context_id": user_context.id,
+                "id": user_context.id,
+                "name": user_context.name,
+                "updated_at": user_context.updated_at,
             },
             status=status.HTTP_200_OK,
         )

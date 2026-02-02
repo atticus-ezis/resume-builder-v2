@@ -29,6 +29,8 @@ services:
     volumes:
       # Mount the entire codebase for live code changes (no rebuild needed)
       - .:/app
+      # Preserve the image's .venv so the bind mount doesn't hide installed deps
+      - /app/.venv
     environment:
       - PYTHONUNBUFFERED=1
       - DB_HOST=db

@@ -13,7 +13,6 @@ from rest_framework import status
 class JobDescriptionViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     pagination_class = CustomPageNumberPagination
-    ordering = ["-updated_at"]
 
     def get_serializer_class(self):
         if self.action == "list":
@@ -21,12 +20,11 @@ class JobDescriptionViewSet(viewsets.ModelViewSet):
         return JobDescriptionSerializer
 
     def get_queryset(self):
-        return JobDescription.objects.filter(user=self.request.user)
+        return JobDescription.objects.filter(user=self.request.user).order_by(
+            "-updated_at"
+        )
 
     def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
-
-    def perform_update(self, serializer):
         serializer.save(user=self.request.user)
 
     def perform_delete(self, serializer):

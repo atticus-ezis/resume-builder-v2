@@ -58,4 +58,6 @@ class DocumentVersion(models.Model):
             )
             if last:
                 self.version_number = last.version_number + 1
+            else:
+                self.version_number = 1
         super().save(*args, **kwargs)
