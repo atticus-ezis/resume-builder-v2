@@ -44,20 +44,16 @@ class DocumentVersion(models.Model):
     )
     markdown = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
-    version_number = models.IntegerField(default=1)
+    version_name = models.CharField(max_length=255, null=True, blank=True)
 
     def __str__(self):
         return f"Version {self.id} of {self.document.job_description.company_name} - {self.document.document_type} - {self.created_at}"
 
     def save(self, *args, **kwargs):
-        if not self.pk:
-            last = (
-                DocumentVersion.objects.filter(document=self.document)
-                .order_by("-version_number")
-                .first()
-            )
-            if last:
-                self.version_number = last.version_number + 1
+        if not self.pk and not self.version_name:
+            existing_versions = self.document.versions.count()
+            if existing_versions > 0:
+                self.version_name = f"{str(self.document)} - {existing_versions + 1}"
             else:
-                self.version_number = 1
+                self.version_name = f"{str(self.document)} - 1"
         super().save(*args, **kwargs)

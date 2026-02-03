@@ -14,7 +14,8 @@ from ai_generation.serializers import (
     DocumentVersionSerializer,
 )
 from ai_generation.models import Document, DocumentVersion
-from ai_generation.services import APICall, UpdateContent, DownloadMarkdown
+from ai_generation.constants import COMMAND_TO_DOCUMENT_TYPES
+from ai_generation.services import APICall, UpdateContent, DownloadMarkdown  # noqa: F401
 from rest_framework import status
 from rest_framework.pagination import PageNumberPagination
 from rest_framework import viewsets
@@ -27,48 +28,61 @@ class GenerateResumeAndCoverLetterView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        user_context, job_description, command = self.get_context(request)
-        try:
-            chat_responses = APICall(user_context, job_description, command).execute()
-        except Exception as e:
-            return Response(
-                {"message": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        # pretend_response = [
+        #     {
+        #         "markdown": "test resume hello world",
+        #         "document": {"id": 1, "type": "resume"},
+        #         "document_version": {"id": 1, "version": 1},
+        #     },
+        #     {
+        #         "markdown": "test cover letter hello mrs hiring manager",
+        #         "document": {"id": 2, "type": "cover_letter"},
+        #         "document_version": {"id": 2, "version": 1},
+        #     },
+        # ]
+        # return Response(pretend_response, status=status.HTTP_200_OK)
+
+        user_context, job_description, commands = self.get_context(request)
+        response_data = []
+        for command in commands:
+            generate_new_version = True
+            # command can be both
+            document, document_created = Document.objects.get_or_create(
+                user=request.user,
+                user_context=user_context,
+                job_description=job_description,
+                document_type=command,
             )
-        pretend_response = [
-            {
-                "markdown": "test resume hello world",
-                "document": {"id": 1, "type": "resume"},
-                "document_version": {"id": 1, "version": 1},
-            },
-            {
-                "markdown": "test cover letter hello mrs hiring manager",
-                "document": {"id": 1, "type": "cover_letter"},
-                "document_version": {"id": 1, "version": 1},
-            },
-        ]
-        return Response(pretend_response, status=status.HTTP_200_OK)
-        # try:
-        #     responses = []
-        #     for response in chat_responses:
-        #         command = response["command"]
-        #         markdown = response["markdown"]
-        #         document, _ = Document.objects.get_or_create(
-        #             user=request.user,
-        #             user_context=user_context,
-        #             job_description=job_description,
-        #             document_type=command,
-        #         )
-        #         document_version = DocumentVersion.objects.create(
-        #             document=document,
-        #             markdown=markdown,
-        #         )
-        #         serializer = DocumentVersionResponseSerializer(document_version)
-        #         responses.append(serializer.data)
-        #     return Response(responses, status=status.HTTP_200_OK)
-        # except Exception as e:
-        #     return Response(
-        #         {"message": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
-        #     )
+            if not document_created:
+                existing_document_version = (
+                    document.final_version
+                    or document.versions.order_by("created_at").last()
+                )
+                if existing_document_version:
+                    document_version = existing_document_version
+                    generate_new_version = False
+
+            if generate_new_version:
+                try:
+                    chat_responses = APICall(
+                        user_context, job_description, command
+                    ).execute()
+                except Exception as e:
+                    return Response(
+                        {"detail": "AI Request Failed", "message": str(e)},
+                        status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    )
+
+                for response in chat_responses:
+                    command = response["command"]
+                    markdown = response["markdown"]
+                    document_version = DocumentVersion.objects.create(
+                        document=document,
+                        markdown=markdown,
+                    )
+            serializer = DocumentVersionResponseSerializer(document_version)
+            response_data.append(serializer.data)
+        return Response(response_data, status=status.HTTP_200_OK)
 
     def get_context(self, request):
         # extract data
@@ -85,9 +99,9 @@ class GenerateResumeAndCoverLetterView(APIView):
 
         user_context = serializer.validated_data["user_context"]
         job_description = serializer.validated_data["job_description"]
-        command = serializer.validated_data["command"]
+        commands = serializer.validated_data["command"]
 
-        return user_context, job_description, command
+        return user_context, job_description, commands
 
 
 class UpdateContentView(APIView):
@@ -105,6 +119,7 @@ class UpdateContentView(APIView):
             serializer.validated_data.get("markdown") or document_version.markdown
         )
         instructions = serializer.validated_data.get("instructions") or None
+        version_name = serializer.validated_data.get("version_name") or None
 
         document = document_version.document
         document_type = document.document_type
@@ -112,15 +127,17 @@ class UpdateContentView(APIView):
         try:
             if instructions:
                 markdown_response = UpdateContent(
-                    markdown, instructions, document_type
+                    markdown, instructions, document_type, version_name
                 ).execute()
             else:
-                # No instructions → use provided markdown (serializer ensures it's present)
                 markdown_response = markdown
-            document_version = DocumentVersion.objects.create(
-                document=document,
-                markdown=markdown_response,
-            )
+            create_kwargs = {
+                "document": document,
+                "markdown": markdown_response,
+            }
+            if version_name:
+                create_kwargs["version_name"] = version_name
+            document_version = DocumentVersion.objects.create(**create_kwargs)
             serializer = DocumentVersionResponseSerializer(document_version)
             return Response(serializer.data, status=status.HTTP_200_OK)
         except Exception as e:

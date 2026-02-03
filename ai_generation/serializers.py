@@ -2,6 +2,7 @@ from rest_framework import serializers
 from applicant_profile.models import UserContext
 from job_profile.models import JobDescription
 from ai_generation.models import DocumentVersion, Document
+from ai_generation.constants import COMMAND_CHOICES
 
 
 class MatchContextSerializer(serializers.Serializer):
@@ -11,9 +12,7 @@ class MatchContextSerializer(serializers.Serializer):
     job_description_id = serializers.PrimaryKeyRelatedField(
         queryset=JobDescription.objects.none(), source="job_description"
     )
-    command = serializers.ChoiceField(
-        choices=["generate_resume", "generate_cover_letter", "generate_both"],
-    )
+    command = serializers.ChoiceField(choices=COMMAND_CHOICES)
 
 
 class UpdateContentSerializer(serializers.Serializer):
@@ -24,6 +23,7 @@ class UpdateContentSerializer(serializers.Serializer):
         required=True,
     )
     instructions = serializers.CharField(required=False, allow_null=True)
+    version_name = serializers.CharField(required=False, allow_null=True)
 
     def validate(self, val):
         if not val.get("instructions") and not val.get("markdown"):
@@ -37,22 +37,16 @@ class DocumentVersionResponseSerializer(serializers.ModelSerializer):
     """Serializer for DocumentVersion response format used across multiple views."""
 
     document = serializers.SerializerMethodField()
-    document_version = serializers.SerializerMethodField()
 
     class Meta:
         model = DocumentVersion
-        fields = ["markdown", "document", "document_version"]
+        fields = ["id", "markdown", "document", "version_name", "updated_at"]
+        read_only_fields = ["id", "document", "updated_at"]
 
     def get_document(self, obj):
         return {
             "id": obj.document.id,
             "type": obj.document.document_type,
-        }
-
-    def get_document_version(self, obj):
-        return {
-            "id": obj.id,
-            "version": obj.version_number,
         }
 
 
