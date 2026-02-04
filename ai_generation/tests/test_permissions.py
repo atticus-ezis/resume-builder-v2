@@ -1,8 +1,9 @@
 import pytest
+from django.urls import reverse
+from rest_framework import status
+
 from applicant_profile.tests.factory import UserContextFactory
 from job_profile.tests.factories import JobDescriptionFactory
-from rest_framework import status
-from django.urls import reverse
 
 
 @pytest.mark.django_db
@@ -27,6 +28,6 @@ class TestUserContextPermissions:
         assert response.status_code == status.HTTP_200_OK
 
         bad_request = unauthenticated_client.post(url, request_body, format="json")
-        assert bad_request.status_code == status.HTTP_401_UNAUTHORIZED, (
-            "Unauthenticated user should not be able to access the endpoint"
-        )
+        assert (
+            bad_request.status_code == status.HTTP_401_UNAUTHORIZED
+        ), "Unauthenticated user should not be able to access the endpoint"

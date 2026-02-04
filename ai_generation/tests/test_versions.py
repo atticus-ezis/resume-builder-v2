@@ -1,11 +1,9 @@
 """Create multiple versions of a document and assert version numbers increment."""
 
 import pytest
-from ai_generation.models import Document, DocumentVersion
+
+from ai_generation.models import DocumentVersion
 from ai_generation.tests.factory import DocumentFactory
-from job_profile.tests.factories import JobDescriptionFactory
-from accounts.tests.factories import UserFactory
-from django.urls import reverse
 
 
 @pytest.mark.django_db

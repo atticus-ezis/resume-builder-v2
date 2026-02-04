@@ -1,11 +1,12 @@
-import pytest
 import re
-from django.urls import reverse
+
+import pytest
 
 # from django.contrib.auth.tokens import default_token_generator
 from allauth.account.forms import default_token_generator
+from allauth.account.models import EmailAddress, EmailConfirmationHMAC
 from allauth.account.utils import user_pk_to_url_str
-from allauth.account.models import EmailConfirmationHMAC, EmailAddress
+from django.urls import reverse
 
 
 @pytest.fixture(autouse=True)

@@ -17,9 +17,31 @@ dependencies = [
     "factory-boy>=3.3.3",
     "markdown>=3.10",
     "openai>=2.9.0",
+    "pre-commit>=4.5.1",
     "psycopg2-binary>=2.9.11",
     "pypdf2>=3.0.1",
     "pytest>=9.0.1",
     "pytest-django>=4.11.1",
+    "ruff>=0.15.0",
     "weasyprint>=67.0",
 ]
+
+[tool.ruff]
+line-length = 88
+target-version = "py312"
+
+[tool.ruff.lint]
+select = [
+    "E",  # pycodestyle errors
+    "W",  # pycodestyle warnings
+    "F",  # pyflakes
+    "I",  # isort
+    "B",  # flake8-bugbear
+    "C4", # flake8-comprehensions
+    "UP", # pyupgrade
+]
+ignore = ["E501"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"

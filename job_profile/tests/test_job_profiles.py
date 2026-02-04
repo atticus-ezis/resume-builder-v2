@@ -1,8 +1,9 @@
 import pytest
-from job_profile.tests.factories import JobDescriptionFactory
-from accounts.tests.factories import UserFactory
 from django.shortcuts import reverse
 from rest_framework.test import APIClient
+
+from accounts.tests.factories import UserFactory
+from job_profile.tests.factories import JobDescriptionFactory
 
 
 @pytest.mark.django_db

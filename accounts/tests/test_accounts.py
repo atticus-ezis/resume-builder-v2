@@ -1,9 +1,8 @@
 import pytest
-from rest_framework.test import APIClient
 from allauth.account.models import EmailAddress
-from accounts.tests.factories import UserFactory
+from rest_framework.test import APIClient
+
 from accounts.tests.conftest import (
-    generate_uid_and_token,
     generate_email_verification_token,
 )
 
@@ -35,12 +34,12 @@ class TestUserRegistration:
                 "password2": password,
             },
         )
-        assert register_response.status_code == 201, (
-            f"expected 201 but got {register_response.status_code} with response: {register_response.data}"
-        )
-        assert register_response.data["detail"] == "Verification e-mail sent.", (
-            f"expected 'Verification e-mail sent.' but got {register_response.data.get('detail', 'no detail')}"
-        )
+        assert (
+            register_response.status_code == 201
+        ), f"expected 201 but got {register_response.status_code} with response: {register_response.data}"
+        assert (
+            register_response.data["detail"] == "Verification e-mail sent."
+        ), f"expected 'Verification e-mail sent.' but got {register_response.data.get('detail', 'no detail')}"
 
         # Get the newly created user and email address
         from django.contrib.auth import get_user_model
@@ -58,9 +57,9 @@ class TestUserRegistration:
                 "password": password,
             },
         )
-        assert bad_response.status_code == 400, (
-            f"expected 400 but got {bad_response.status_code} with response: {bad_response.data}"
-        )
+        assert (
+            bad_response.status_code == 400
+        ), f"expected 400 but got {bad_response.status_code} with response: {bad_response.data}"
 
         # Generate verification token from the newly created email address
         email_verification_token = generate_email_verification_token(email)
@@ -72,9 +71,9 @@ class TestUserRegistration:
                 "key": email_verification_token,
             },
         )
-        assert confirm_response.status_code == 200, (
-            f"email not confirmed: expected 200 but got {confirm_response.status_code} with response: {confirm_response.data}"
-        )
+        assert (
+            confirm_response.status_code == 200
+        ), f"email not confirmed: expected 200 but got {confirm_response.status_code} with response: {confirm_response.data}"
 
         # Refresh email address from database to get updated status
         email_address.refresh_from_db()
@@ -89,9 +88,9 @@ class TestUserRegistration:
             },
         )
 
-        assert response.status_code == 200, (
-            f"expected 200 but got {response.status_code} with response: {response.data}"
-        )
+        assert (
+            response.status_code == 200
+        ), f"expected 200 but got {response.status_code} with response: {response.data}"
 
     # def test_confirm_password_reset(self, confirm_password_reset_url):
     #     user = UserFactory()

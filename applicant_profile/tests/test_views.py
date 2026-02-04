@@ -1,5 +1,6 @@
 import pytest
 from rest_framework import status
+
 from applicant_profile.models import UserContext
 
 
@@ -23,7 +24,6 @@ class TestApplicantProfileViews:
             },
             content_type="application/json",
         )
-        type
         # Debug: print error if status is not 201
         if response.status_code != status.HTTP_201_CREATED:
             print(f"Error response: {response.status_code}")

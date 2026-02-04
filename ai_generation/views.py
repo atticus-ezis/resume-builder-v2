@@ -1,24 +1,28 @@
+from django.http import HttpResponse
+from rest_framework import status, viewsets
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from django.http import HttpResponse
 from rest_framework.views import APIView
-from applicant_profile.models import UserContext
-from job_profile.models import JobDescription
+
+from ai_generation.models import Document, DocumentVersion
 from ai_generation.serializers import (
-    MatchContextSerializer,
-    UpdateContentSerializer,
-    DownloadMarkdownSerializer,
-    DocumentVersionResponseSerializer,
     DocumentListSerializer,
     DocumentSerializer,
+    DocumentVersionResponseSerializer,
     DocumentVersionSerializer,
+    DownloadMarkdownSerializer,
+    MatchContextSerializer,
+    UpdateContentSerializer,
 )
-from ai_generation.models import Document, DocumentVersion
-from ai_generation.constants import COMMAND_TO_DOCUMENT_TYPES
-from ai_generation.services import APICall, UpdateContent, DownloadMarkdown  # noqa: F401
-from rest_framework import status
-from rest_framework.pagination import PageNumberPagination
-from rest_framework import viewsets
+from ai_generation.services import (  # noqa: F401
+    APICall,
+    DownloadMarkdown,
+    UpdateContent,
+)
+from applicant_profile.models import UserContext
+from job_profile.models import JobDescription
+
 # Create your views here.
 
 # frontend must match context models

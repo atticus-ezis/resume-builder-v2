@@ -1,16 +1,17 @@
-from applicant_profile.models import UserContext
-from job_profile.models import JobDescription
-from openai import OpenAI
-from resume_builder.settings import OPENAI_API_KEY
 from datetime import datetime
-from weasyprint import HTML
+
 import markdown
 from django.template.loader import render_to_string
+from openai import OpenAI
+from weasyprint import HTML
 
 from ai_generation.constants import (
     COMMAND_TO_DOCUMENT_TYPES,
     DOCUMENT_TYPE_TO_PROMPT_LABEL,
 )
+from applicant_profile.models import UserContext
+from job_profile.models import JobDescription
+from resume_builder.settings import OPENAI_API_KEY
 
 
 def api_call(client, role_description, prompt):

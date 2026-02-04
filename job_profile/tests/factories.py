@@ -1,7 +1,8 @@
-from factory.django import DjangoModelFactory
-from job_profile.models import JobDescription
 import factory
+from factory.django import DjangoModelFactory
+
 from accounts.tests.factories import UserFactory
+from job_profile.models import JobDescription
 
 
 class JobDescriptionFactory(DjangoModelFactory):

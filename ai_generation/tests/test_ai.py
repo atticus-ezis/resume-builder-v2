@@ -1,6 +1,6 @@
 from openai import OpenAI
+
 from resume_builder.settings import OPENAI_API_KEY
-from rest_framework import status
 
 
 class TestAICall:

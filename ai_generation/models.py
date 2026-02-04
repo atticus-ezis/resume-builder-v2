@@ -1,7 +1,8 @@
-from django.db import models
 from django.contrib.auth.models import User
-from job_profile.models import JobDescription
+from django.db import models
+
 from applicant_profile.models import UserContext
+from job_profile.models import JobDescription
 
 # Create your models here.
 

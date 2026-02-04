@@ -10,12 +10,13 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
-from datetime import timedelta
-from pathlib import Path
-import environ
 import os
 import sys
+from datetime import timedelta
+from pathlib import Path
+
 import dj_database_url
+import environ
 
 # Set library path for WeasyPrint on macOS
 if sys.platform == "darwin":

@@ -15,46 +15,46 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 
+from dj_rest_auth.jwt_auth import get_refresh_view
+from dj_rest_auth.registration.views import (
+    RegisterView,
+    ResendEmailVerificationView,
+)
+from dj_rest_auth.views import (
+    PasswordChangeView,
+    PasswordResetConfirmView,
+    PasswordResetView,
+    UserDetailsView,
+)
 from django.contrib import admin
-from django.urls import path, include
-from rest_framework.response import Response
-from rest_framework.decorators import api_view
+from django.urls import include, path
+from django.views.generic import TemplateView
+from drf_spectacular.views import (
+    SpectacularAPIView,
+    SpectacularRedocView,
+    SpectacularSwaggerView,
+)
 from rest_framework import status
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from rest_framework.routers import DefaultRouter
+from rest_framework_simplejwt.views import TokenVerifyView
 
 from accounts.views import (
+    CSRFExemptLoginView,
     # CustomPasswordResetConfirmView,
     # CustomRegisterView,
     CustomVerifyEmailView,
-    CSRFExemptLoginView,
 )
-from dj_rest_auth.views import (
-    PasswordResetView,
-    PasswordChangeView,
-    PasswordResetConfirmView,
-    LoginView,
-    LogoutView,
-    UserDetailsView,
-)
-from dj_rest_auth.registration.views import RegisterView, VerifyEmailView
-from rest_framework_simplejwt.views import TokenVerifyView
-from dj_rest_auth.jwt_auth import get_refresh_view
-from dj_rest_auth.registration.views import ResendEmailVerificationView
-from django.views.generic import TemplateView
-from rest_framework.routers import DefaultRouter
-from applicant_profile.views import UserContextViewSet
-from job_profile.views import JobDescriptionViewSet
 from ai_generation.views import (
+    DocumentVersionViewSet,
+    DocumentViewSet,
     DownloadMarkdownView,
     GenerateResumeAndCoverLetterView,
     UpdateContentView,
-    DocumentViewSet,
-    DocumentVersionViewSet,
 )
-from drf_spectacular.views import (
-    SpectacularAPIView,
-    SpectacularSwaggerView,
-    SpectacularRedocView,
-)
+from applicant_profile.views import UserContextViewSet
+from job_profile.views import JobDescriptionViewSet
 
 router = DefaultRouter()
 router.register(r"applicant", UserContextViewSet, basename="applicant")

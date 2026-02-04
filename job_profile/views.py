@@ -1,13 +1,13 @@
-from job_profile.models import JobDescription
-from job_profile.serializers import (
-    JobDescriptionSerializer,
-    JobDescriptionListSerializer,
-)
-from rest_framework import viewsets
-from resume_builder.pagination import CustomPageNumberPagination
+from rest_framework import status, viewsets
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework import status
+
+from job_profile.models import JobDescription
+from job_profile.serializers import (
+    JobDescriptionListSerializer,
+    JobDescriptionSerializer,
+)
+from resume_builder.pagination import CustomPageNumberPagination
 
 
 class JobDescriptionViewSet(viewsets.ModelViewSet):

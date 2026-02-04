@@ -1,14 +1,12 @@
 import logging
 
-
-from rest_framework.permissions import AllowAny
-from django.utils.translation import gettext_lazy as _
-from django.utils.decorators import method_decorator
-from dj_rest_auth.views import LoginView
-from django.views.decorators.csrf import csrf_exempt
 from dj_rest_auth.registration.views import (
     VerifyEmailView as DjRestVerifyEmailView,
 )
+from dj_rest_auth.views import LoginView
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_exempt
+from rest_framework.permissions import AllowAny
 
 logger = logging.getLogger(__name__)
 

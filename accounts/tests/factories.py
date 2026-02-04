@@ -1,7 +1,7 @@
 import factory
+from allauth.account.models import EmailAddress
 from django.contrib.auth.models import User
 from faker import Faker
-from allauth.account.models import EmailAddress
 
 fake = Faker()
 

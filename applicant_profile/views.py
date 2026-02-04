@@ -1,17 +1,16 @@
-from rest_framework.response import Response
-from rest_framework import status
-from .services import PDFExtractor
+from rest_framework import status, viewsets
+from rest_framework.decorators import action
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+
+from .models import UserContext
 from .serializers import (
-    UserContextSerializer,
     FileUploadSerializer,
     UserContextListSerializer,
+    UserContextSerializer,
 )
-from rest_framework import viewsets
-from .models import UserContext
-from rest_framework.pagination import PageNumberPagination
-from rest_framework.decorators import action
-
+from .services import PDFExtractor
 
 # Create your views here.
 

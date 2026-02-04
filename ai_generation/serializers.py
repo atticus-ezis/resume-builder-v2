@@ -1,8 +1,9 @@
 from rest_framework import serializers
+
+from ai_generation.constants import COMMAND_CHOICES
+from ai_generation.models import Document, DocumentVersion
 from applicant_profile.models import UserContext
 from job_profile.models import JobDescription
-from ai_generation.models import DocumentVersion, Document
-from ai_generation.constants import COMMAND_CHOICES
 
 
 class MatchContextSerializer(serializers.Serializer):

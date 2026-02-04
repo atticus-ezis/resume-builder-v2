@@ -1,7 +1,8 @@
-from factory.django import DjangoModelFactory
 import factory
-from ai_generation.models import Document
+from factory.django import DjangoModelFactory
+
 from accounts.tests.factories import UserFactory
+from ai_generation.models import Document
 from applicant_profile.tests.factory import UserContextFactory
 from job_profile.tests.factories import JobDescriptionFactory
 
