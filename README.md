@@ -81,7 +81,7 @@ Takes context from user and job profiles and passes it to AI. Returns a Markdown
 - DocumentVersion:
   document (FK)
   markdown: TextField
-  version_number: IntField
+  version_name: IntField
 
 ### Endpoints
 
@@ -177,7 +177,7 @@ Fetch from with saved draft or edited content
   api/context/document-version/ (CRUD)
 
   DocumentVersion
-  fields = ["id", "document", "version_number", "markdown", "created_at"]
+  fields = ["id", "document", "version_name", "markdown", "created_at"]
 
   #### Docker Notes
 

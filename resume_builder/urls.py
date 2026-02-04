@@ -49,7 +49,6 @@ from accounts.views import (
 from ai_generation.views import (
     DocumentVersionViewSet,
     DocumentViewSet,
-    DownloadMarkdownView,
     GenerateResumeAndCoverLetterView,
     UpdateContentView,
 )
@@ -167,11 +166,6 @@ urlpatterns = [
                     "update-content/",
                     UpdateContentView.as_view(),
                     name="update_content",
-                ),
-                path(
-                    "download-content/",
-                    DownloadMarkdownView.as_view(),
-                    name="download_content",
                 ),
                 path("", include(router.urls)),
             ]

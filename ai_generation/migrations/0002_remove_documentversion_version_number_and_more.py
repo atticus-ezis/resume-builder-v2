@@ -4,19 +4,18 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('ai_generation', '0001_initial'),
+        ("ai_generation", "0001_initial"),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='documentversion',
-            name='version_number',
+            model_name="documentversion",
+            name="version_name",
         ),
         migrations.AddField(
-            model_name='documentversion',
-            name='version_name',
+            model_name="documentversion",
+            name="version_name",
             field=models.CharField(blank=True, max_length=255, null=True),
         ),
     ]

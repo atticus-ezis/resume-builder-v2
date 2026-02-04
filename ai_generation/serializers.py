@@ -66,8 +66,6 @@ class DocumentVersionResponseSerializer(serializers.ModelSerializer):
 
 
 class DownloadMarkdownSerializer(serializers.Serializer):
-    file_name = serializers.CharField(required=True)
-    markdown = serializers.CharField(required=False, allow_blank=True)
     document_version_id = serializers.PrimaryKeyRelatedField(
         queryset=DocumentVersion.objects.none(),
         source="document_version",
@@ -141,5 +139,5 @@ class DocumentListSerializer(serializers.ModelSerializer):
 class DocumentVersionSerializer(serializers.ModelSerializer):
     class Meta:
         model = DocumentVersion
-        fields = ["id", "document", "version_number", "markdown", "created_at"]
-        read_only_fields = ["id", "version_number", "created_at"]
+        fields = ["id", "document", "version_name", "markdown", "created_at"]
+        read_only_fields = ["id", "version_name", "created_at"]

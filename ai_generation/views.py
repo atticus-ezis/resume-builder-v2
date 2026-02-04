@@ -1,5 +1,7 @@
 from django.http import HttpResponse
+from django.shortcuts import get_object_or_404
 from rest_framework import status, viewsets
+from rest_framework.decorators import action
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -11,7 +13,6 @@ from ai_generation.serializers import (
     DocumentSerializer,
     DocumentVersionResponseSerializer,
     DocumentVersionSerializer,
-    DownloadMarkdownSerializer,
     MatchContextSerializer,
     UpdateContentSerializer,
 )
@@ -152,43 +153,6 @@ class UpdateContentView(APIView):
                 )
 
 
-class DownloadMarkdownView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def post(self, request):
-        file_name, document_version = self.get_context(request)
-        # Generate PDF
-        try:
-            markdown = document_version.markdown
-            pdf_bytes = DownloadMarkdown(markdown, request).execute()
-            response = HttpResponse(pdf_bytes, content_type="application/pdf")
-            response["Content-Disposition"] = f'attachment; filename="{file_name}.pdf"'
-            # finalize the DocumentVersion
-            document = document_version.document
-            document.final_version = document_version
-            document.save()
-            return response
-        except Exception as e:
-            return Response(
-                {"message": f"Failed to generate PDF: {str(e)}"},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            )
-
-    def get_context(self, request):
-        serializer = DownloadMarkdownSerializer(data=request.data)
-        serializer.fields[
-            "document_version_id"
-        ].queryset = DocumentVersion.objects.filter(document__user=request.user)
-        serializer.is_valid(raise_exception=True)
-        document_version = serializer.validated_data["document_version"]
-        file_name = serializer.validated_data["file_name"]
-
-        return file_name, document_version
-
-
-# Document Management
-
-
 class DocumentViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     pagination_class = PageNumberPagination
@@ -221,3 +185,20 @@ class DocumentVersionViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(document_id=document_id)
 
         return queryset
+
+    @action(detail=True, methods=["get"], name="pdf_download", url_path="pdf")
+    def pdf_download(self, request, pk=None):
+        document_version = get_object_or_404(DocumentVersion, id=pk)
+        markdown = document_version.markdown
+        file_name = document_version.version_name
+
+        try:
+            pdf_bytes = DownloadMarkdown(markdown, request).execute()
+            response = HttpResponse(pdf_bytes, content_type="application/pdf")
+            response["Content-Disposition"] = f'attachment; filename="{file_name}.pdf"'
+            return response
+        except Exception as e:
+            return Response(
+                {"message": f"Failed to generate PDF: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )

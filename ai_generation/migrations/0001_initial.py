@@ -6,44 +6,105 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = [
-        ('applicant_profile', '0003_alter_usercontext_context'),
-        ('job_profile', '0002_jobdescription_job_position_and_more'),
+        ("applicant_profile", "0003_alter_usercontext_context"),
+        ("job_profile", "0002_jobdescription_job_position_and_more"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='Document',
+            name="Document",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('document_type', models.CharField(choices=[('resume', 'Resume'), ('cover_letter', 'Cover Letter')], max_length=255)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('job_description', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='documents', to='job_profile.jobdescription')),
-                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='documents', to=settings.AUTH_USER_MODEL)),
-                ('user_context', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='documents', to='applicant_profile.usercontext')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "document_type",
+                    models.CharField(
+                        choices=[
+                            ("resume", "Resume"),
+                            ("cover_letter", "Cover Letter"),
+                        ],
+                        max_length=255,
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                (
+                    "job_description",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="documents",
+                        to="job_profile.jobdescription",
+                    ),
+                ),
+                (
+                    "user",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="documents",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "user_context",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="documents",
+                        to="applicant_profile.usercontext",
+                    ),
+                ),
             ],
         ),
         migrations.CreateModel(
-            name='DocumentVersion',
+            name="DocumentVersion",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('markdown', models.TextField()),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('version_number', models.IntegerField(default=1)),
-                ('document', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='versions', to='ai_generation.document')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("markdown", models.TextField()),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("version_name", models.IntegerField(default=1)),
+                (
+                    "document",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="versions",
+                        to="ai_generation.document",
+                    ),
+                ),
             ],
         ),
         migrations.AddField(
-            model_name='document',
-            name='final_version',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='final_version', to='ai_generation.documentversion'),
+            model_name="document",
+            name="final_version",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name="final_version",
+                to="ai_generation.documentversion",
+            ),
         ),
         migrations.AddConstraint(
-            model_name='document',
-            constraint=models.UniqueConstraint(fields=('user', 'user_context', 'job_description', 'document_type'), name='unique_job_per_user'),
+            model_name="document",
+            constraint=models.UniqueConstraint(
+                fields=("user", "user_context", "job_description", "document_type"),
+                name="unique_job_per_user",
+            ),
         ),
     ]
