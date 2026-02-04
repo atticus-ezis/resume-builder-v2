@@ -1,12 +1,8 @@
 import pytest
 from applicant_profile.tests.factory import UserContextFactory
 from job_profile.tests.factories import JobDescriptionFactory
-from ai_generation.tests.factory import DocumentFactory
 from rest_framework import status
-from ai_generation.models import Document, DocumentVersion
 from django.urls import reverse
-from openai import OpenAI
-from resume_builder.settings import OPENAI_API_KEY
 
 
 @pytest.mark.django_db
@@ -34,15 +30,3 @@ class TestUserContextPermissions:
         assert bad_request.status_code == status.HTTP_401_UNAUTHORIZED, (
             "Unauthenticated user should not be able to access the endpoint"
         )
-
-    # def test_api_call_is_authenticated(self):
-    #     client = OpenAI(api_key=OPENAI_API_KEY)
-    #     response = client.chat.completions.create(
-    #         model="gpt-4o-mini",
-    #         messages=[
-    #             {"role": "system", "content": "You are a helpful assistant."},
-    #             {"role": "user", "content": "please repeat the word 'banana'"},
-    #         ],
-    #     )
-    #     assert response.status_code == status.HTTP_200_OK
-    #     assert "banana" in response.choices[0].message.content
