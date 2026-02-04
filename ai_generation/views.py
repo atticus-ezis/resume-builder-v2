@@ -28,19 +28,19 @@ class GenerateResumeAndCoverLetterView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        # pretend_response = [
-        #     {
-        #         "markdown": "test resume hello world",
-        #         "document": {"id": 1, "type": "resume"},
-        #         "document_version": {"id": 1, "version": 1},
-        #     },
-        #     {
-        #         "markdown": "test cover letter hello mrs hiring manager",
-        #         "document": {"id": 2, "type": "cover_letter"},
-        #         "document_version": {"id": 2, "version": 1},
-        #     },
-        # ]
-        # return Response(pretend_response, status=status.HTTP_200_OK)
+        pretend_response = [
+            {
+                "markdown": "test resume hello world",
+                "document": {"id": 1, "type": "resume"},
+                "document_version": {"id": 1, "version": 1},
+            },
+            {
+                "markdown": "test cover letter hello mrs hiring manager",
+                "document": {"id": 2, "type": "cover_letter"},
+                "document_version": {"id": 2, "version": 1},
+            },
+        ]
+        return Response(pretend_response, status=status.HTTP_200_OK)
 
         user_context, job_description, commands = self.get_context(request)
         response_data = []
@@ -113,37 +113,39 @@ class UpdateContentView(APIView):
             "document_version_id"
         ].queryset = DocumentVersion.objects.filter(document__user=request.user)
         serializer.is_valid(raise_exception=True)
-
-        document_version = serializer.validated_data["document_version"]
-        markdown = (
-            serializer.validated_data.get("markdown") or document_version.markdown
-        )
-        instructions = serializer.validated_data.get("instructions") or None
-        version_name = serializer.validated_data.get("version_name") or None
-
-        document = document_version.document
-        document_type = document.document_type
-
-        try:
-            if instructions:
-                markdown_response = UpdateContent(
-                    markdown, instructions, document_type, version_name
-                ).execute()
-            else:
-                markdown_response = markdown
-            create_kwargs = {
-                "document": document,
-                "markdown": markdown_response,
-            }
-            if version_name:
-                create_kwargs["version_name"] = version_name
-            document_version = DocumentVersion.objects.create(**create_kwargs)
-            serializer = DocumentVersionResponseSerializer(document_version)
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        except Exception as e:
-            return Response(
-                {"message": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        if serializer.validated_data.get("return_old"):
+            document_version = serializer.validated_data.get("return_old")
+        else:
+            document_version = serializer.validated_data["document_version"]
+            markdown = (
+                serializer.validated_data.get("markdown") or document_version.markdown
             )
+            instructions = serializer.validated_data.get("instructions") or None
+            version_name = serializer.validated_data.get("version_name") or None
+
+            document = document_version.document
+            document_type = document.document_type
+
+            try:
+                if instructions:
+                    markdown_response = UpdateContent(
+                        markdown, instructions, document_type, version_name
+                    ).execute()
+                else:
+                    markdown_response = markdown
+                create_kwargs = {
+                    "document": document,
+                    "markdown": markdown_response,
+                }
+                if version_name:
+                    create_kwargs["version_name"] = version_name
+                document_version = DocumentVersion.objects.create(**create_kwargs)
+                serializer = DocumentVersionResponseSerializer(document_version)
+                return Response(serializer.data, status=status.HTTP_200_OK)
+            except Exception as e:
+                return Response(
+                    {"message": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                )
 
 
 class DownloadMarkdownView(APIView):

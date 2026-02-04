@@ -26,10 +26,24 @@ class UpdateContentSerializer(serializers.Serializer):
     version_name = serializers.CharField(required=False, allow_null=True)
 
     def validate(self, val):
-        if not val.get("instructions") and not val.get("markdown"):
+        if (
+            not val.get("instructions")
+            and not val.get("markdown")
+            and val.get("version_name")
+        ):
+            document_version = val.get("document_version")
+            document_version.version_name = val.get("version_name")
+            document_version.save()
+            val["return_old"] = document_version
+        if (
+            not val.get("instructions")
+            and not val.get("markdown")
+            and not val.get("version_name")
+        ):
             raise serializers.ValidationError(
-                "Either instructions or markdown must be provided"
+                "Either instructions, markdown, or version name must be provided"
             )
+
         return val
 
 
@@ -40,8 +54,8 @@ class DocumentVersionResponseSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = DocumentVersion
-        fields = ["id", "markdown", "document", "version_name", "updated_at"]
-        read_only_fields = ["id", "document", "updated_at"]
+        fields = ["id", "markdown", "document", "version_name", "created_at"]
+        read_only_fields = ["id", "document", "created_at"]
 
     def get_document(self, obj):
         return {
