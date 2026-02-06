@@ -14,7 +14,7 @@ COMMAND_TO_DOCUMENT_TYPES = {
 }
 
 # Map document_type (DB value) to label used in prompts (e.g. "cover letter" with space)
-DOCUMENT_TYPE_TO_PROMPT_LABEL = {
+COMMAND_TO_READABLE_COMMAND = {
     "resume": "resume",
     "cover_letter": "cover letter",
 }

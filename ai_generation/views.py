@@ -7,6 +7,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from ai_generation.constants import COMMAND_TO_DOCUMENT_TYPES
 from ai_generation.models import Document, DocumentVersion
 from ai_generation.serializers import (
     DocumentListSerializer,
@@ -33,19 +34,19 @@ class GenerateResumeAndCoverLetterView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        pretend_response = [
-            {
-                "markdown": "test resume hello world",
-                "document": {"id": 1, "type": "resume"},
-                "document_version": {"id": 1, "version": 1},
-            },
-            {
-                "markdown": "test cover letter hello mrs hiring manager",
-                "document": {"id": 2, "type": "cover_letter"},
-                "document_version": {"id": 2, "version": 1},
-            },
-        ]
-        return Response(pretend_response, status=status.HTTP_200_OK)
+        # pretend_response = [
+        #     {
+        #         "markdown": "test resume hello world",
+        #         "document": {"id": 1, "type": "resume"},
+        #         "document_version": {"id": 1, "version": 1},
+        #     },
+        #     {
+        #         "markdown": "test cover letter hello mrs hiring manager",
+        #         "document": {"id": 2, "type": "cover_letter"},
+        #         "document_version": {"id": 2, "version": 1},
+        #     },
+        # ]
+        # return Response(pretend_response, status=status.HTTP_200_OK)
 
         user_context, job_description, commands = self.get_context(request)
         response_data = []
@@ -78,13 +79,10 @@ class GenerateResumeAndCoverLetterView(APIView):
                         status=status.HTTP_500_INTERNAL_SERVER_ERROR,
                     )
 
-                for response in chat_responses:
-                    command = response["command"]
-                    markdown = response["markdown"]
-                    document_version = DocumentVersion.objects.create(
-                        document=document,
-                        markdown=markdown,
-                    )
+                document_version = DocumentVersion.objects.create(
+                    document=document,
+                    markdown=chat_responses,
+                )
             serializer = DocumentVersionResponseSerializer(document_version)
             response_data.append(serializer.data)
         return Response(response_data, status=status.HTTP_200_OK)
@@ -101,10 +99,10 @@ class GenerateResumeAndCoverLetterView(APIView):
         ].queryset = JobDescription.objects.filter(user=request.user)
 
         serializer.is_valid(raise_exception=True)
-
         user_context = serializer.validated_data["user_context"]
         job_description = serializer.validated_data["job_description"]
-        commands = serializer.validated_data["command"]
+        command = serializer.validated_data["command"]
+        commands = COMMAND_TO_DOCUMENT_TYPES[command]
 
         return user_context, job_description, commands
 

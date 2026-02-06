@@ -3,6 +3,7 @@ from django.db import models
 
 from applicant_profile.models import UserContext
 from job_profile.models import JobDescription
+from resume_builder.utils import compute_context_hash
 
 # Create your models here.
 
@@ -46,6 +47,7 @@ class DocumentVersion(models.Model):
     markdown = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
     version_name = models.CharField(max_length=255, null=True, blank=True)
+    context_hash = models.CharField(max_length=64, db_index=True, blank=True, null=True)
 
     def __str__(self):
         return f"Version {self.id} of {self.document.job_description.company_name} - {self.document.document_type} - {self.created_at}"
@@ -57,4 +59,18 @@ class DocumentVersion(models.Model):
                 self.version_name = f"{str(self.document)} - {existing_versions + 1}"
             else:
                 self.version_name = f"{str(self.document)} - 1"
+        if self.markdown is not None:
+            self.context_hash = compute_context_hash(self.markdown)
         super().save(*args, **kwargs)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["document", "context_hash"],
+                name="unique_context_hash_per_document",
+            ),
+            models.UniqueConstraint(
+                fields=["document", "version_name"],
+                name="unique_version_name_per_document",
+            ),
+        ]

@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from ai_generation.constants import COMMAND_CHOICES
+from ai_generation.constants import COMMAND_CHOICES, COMMAND_TO_DOCUMENT_TYPES
 from ai_generation.models import Document, DocumentVersion
 from applicant_profile.models import UserContext
 from job_profile.models import JobDescription
@@ -8,12 +8,24 @@ from job_profile.models import JobDescription
 
 class MatchContextSerializer(serializers.Serializer):
     user_context_id = serializers.PrimaryKeyRelatedField(
-        queryset=UserContext.objects.none(), source="user_context"
+        queryset=UserContext.objects.none(), source="user_context", required=True
     )
     job_description_id = serializers.PrimaryKeyRelatedField(
-        queryset=JobDescription.objects.none(), source="job_description"
+        queryset=JobDescription.objects.none(), source="job_description", required=True
     )
-    command = serializers.ChoiceField(choices=COMMAND_CHOICES)
+    command = serializers.ChoiceField(choices=COMMAND_CHOICES, required=True)
+
+    commands = serializers.SerializerMethodField()
+
+    def get_commands(self, obj):
+        command = obj.get("command")
+        if command in COMMAND_CHOICES:
+            commands = COMMAND_TO_DOCUMENT_TYPES[command]
+        else:
+            raise serializers.ValidationError(
+                "Invalid command, must select from: generate_resume, generate_cover_letter, generate_both"
+            )
+        return commands
 
 
 class UpdateContentSerializer(serializers.Serializer):
