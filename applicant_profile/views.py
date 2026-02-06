@@ -34,15 +34,14 @@ class UserContextViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         context = serializer.validated_data["context"]
-        hashed_context = compute_context_hash(context)
-        duplicate = find_duplicate_context(hashed_context, request.user).first()
+        name = serializer.validated_data["name"]
+        duplicate, message = get_or_rename_duplicate_context(
+            context, name, request.user
+        )
         if duplicate:
-            duplicate.name = serializer.validated_data["name"]
-            duplicate.save()
-            return Response(
-                UserContextSerializer(duplicate).data,
-                status=status.HTTP_200_OK,
-            )
+            data = UserContextSerializer(duplicate).data
+            data["message"] = message
+            return Response(data, status=status.HTTP_200_OK)
         self.perform_create(serializer)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
@@ -71,8 +70,14 @@ class UserContextViewSet(viewsets.ModelViewSet):
             context={"request": request},
         )
         context_serializer.is_valid(raise_exception=True)
-        user_context = context_serializer.save(user=request.user)
 
+        duplicate, message = get_or_rename_duplicate_context(text, name, request.user)
+        if duplicate:
+            data = UserContextSerializer(duplicate).data
+            data["message"] = message
+            return Response(data, status=status.HTTP_200_OK)
+
+        user_context = context_serializer.save(user=request.user)
         return Response(
             {
                 "message": "PDF file uploaded successfully",
@@ -86,3 +91,19 @@ class UserContextViewSet(viewsets.ModelViewSet):
 
 def find_duplicate_context(hashed_context, user):
     return UserContext.objects.filter(context_hash=hashed_context, user=user)
+
+
+def get_or_rename_duplicate_context(context, new_name, user):
+    """
+    If a UserContext with the same context hash exists for this user, rename it
+    to new_name and return (instance, message). Otherwise return (None, None).
+    """
+    hashed_context = compute_context_hash(context)
+    duplicate = find_duplicate_context(hashed_context, user).first()
+    if not duplicate:
+        return None, None
+    old_name = duplicate.name
+    duplicate.name = new_name
+    duplicate.save()
+    message = f'"{old_name}" changed to "{new_name}"'
+    return duplicate, message

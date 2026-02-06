@@ -1,18 +1,40 @@
 from django.db import IntegrityError
 from rest_framework import serializers
 
+from resume_builder.utils import compute_context_hash
+
 from .models import UserContext
 
 
-def _integrity_error_to_validation_error(exc):
+def _integrity_error_to_validation_error(exc, validated_data, user):
     """Convert DB IntegrityError to ValidationError with a clear message."""
     message = str(exc)
     if "unique_name_per_user" in message:
-        raise serializers.ValidationError(
-            {"name": "You already have a context with this name."}
+        name = validated_data.get("name")
+        detail = (
+            f"You already have a context with this name: {name}."
+            if name
+            else "You already have a context with this name."
         )
+        raise serializers.ValidationError(detail)
     if "unique_context_per_user" in message:
-        raise serializers.ValidationError("A context with this content already exists.")
+        context_hash = (
+            compute_context_hash(validated_data.get("context"))
+            if validated_data.get("context") is not None
+            else None
+        )
+        existing = (
+            UserContext.objects.filter(user=user, context_hash=context_hash).first()
+            if context_hash
+            else None
+        )
+        existing_name = existing.name if existing else None
+        detail = (
+            f"This content already exists under the name: {existing_name}."
+            if existing_name
+            else "This content already exists."
+        )
+        raise serializers.ValidationError(detail)
     raise serializers.ValidationError(
         "A context with this name or content already exists for your account."
     )
@@ -46,13 +68,15 @@ class UserContextSerializer(serializers.ModelSerializer):
         try:
             return super().create(validated_data)
         except IntegrityError as e:
-            _integrity_error_to_validation_error(e)
+            request = self.context.get("request")
+            user = request.user if request else None
+            _integrity_error_to_validation_error(e, validated_data, user)
 
     def update(self, instance, validated_data):
         try:
             return super().update(instance, validated_data)
         except IntegrityError as e:
-            _integrity_error_to_validation_error(e)
+            _integrity_error_to_validation_error(e, validated_data, instance.user)
 
 
 class UserContextListSerializer(serializers.ModelSerializer):

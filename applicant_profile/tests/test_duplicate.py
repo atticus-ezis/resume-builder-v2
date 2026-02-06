@@ -11,7 +11,7 @@ class TestDuplicateApplicant:
     def test_duplicate_context_renamed(
         self, authenticated_client, create_user_context_url
     ):
-        """POST with same context (same hash) as existing returns 400."""
+        """POST with same context (same hash), different name: existing is renamed and returned with 200."""
         client, user = authenticated_client
         context = {"summary": "Same content", "skills": ["Python"]}
         name = "First"
@@ -25,7 +25,7 @@ class TestDuplicateApplicant:
         assert r1.status_code == status.HTTP_201_CREATED
         assert UserContext.objects.filter(user=user).count() == 1
 
-        # Same context, different name -> same context_hash -> rejected
+        # Same context, different name -> existing renamed, 200, message in response
         r2 = client.post(
             create_user_context_url,
             {"context": context, "name": "Second name"},
@@ -34,6 +34,8 @@ class TestDuplicateApplicant:
         assert r2.status_code == status.HTTP_200_OK
         assert UserContext.objects.filter(user=user).count() == 1
         assert UserContext.objects.first().name == "Second name"
+        assert "message" in r2.data
+        assert r2.data["message"] == '"First" changed to "Second name"'
 
     def test_duplicate_name_rejected(
         self, authenticated_client, create_user_context_url
@@ -59,7 +61,8 @@ class TestDuplicateApplicant:
 
         assert r2.status_code == status.HTTP_400_BAD_REQUEST
         assert UserContext.objects.filter(user=user).count() == 1
-        assert "name" in str(r2.data).lower()
+        assert "name" in r2.data
+        assert "already" in str(r2.data["name"]).lower()
 
     def test_different_user_same_context_allowed(
         self, authenticated_client, create_user_context_url
