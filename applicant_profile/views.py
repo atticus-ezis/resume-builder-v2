@@ -4,6 +4,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from resume_builder.pagination import CustomPageNumberPagination
+from resume_builder.utils import compute_context_hash
 
 from .models import UserContext
 from .serializers import (
@@ -28,6 +29,22 @@ class UserContextViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         return UserContext.objects.filter(user=self.request.user)
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        context = serializer.validated_data["context"]
+        hashed_context = compute_context_hash(context)
+        duplicate = find_duplicate_context(hashed_context, request.user).first()
+        if duplicate:
+            duplicate.name = serializer.validated_data["name"]
+            duplicate.save()
+            return Response(
+                UserContextSerializer(duplicate).data,
+                status=status.HTTP_200_OK,
+            )
+        self.perform_create(serializer)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
@@ -65,3 +82,7 @@ class UserContextViewSet(viewsets.ModelViewSet):
             },
             status=status.HTTP_200_OK,
         )
+
+
+def find_duplicate_context(hashed_context, user):
+    return UserContext.objects.filter(context_hash=hashed_context, user=user)

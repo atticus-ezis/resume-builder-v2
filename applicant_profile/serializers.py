@@ -1,7 +1,7 @@
 from django.db import IntegrityError
 from rest_framework import serializers
 
-from .models import UserContext, compute_context_hash
+from .models import UserContext
 
 
 def _integrity_error_to_validation_error(exc):
@@ -31,22 +31,15 @@ class UserContextSerializer(serializers.ModelSerializer):
 
         user = request.user
         name = attrs.get("name")
-        context = attrs.get("context")
 
         qs = UserContext.objects.filter(user=user)
         if self.instance:
             qs = qs.exclude(pk=self.instance.pk)
 
         if name is not None and qs.filter(name=name).exists():
-            raise serializers.ValidationError(
-                {"name": "You already have a context with this name."}
-            )
-        if context is not None:
-            context_hash = compute_context_hash(context)
-            if qs.filter(context_hash=context_hash).exists():
-                raise serializers.ValidationError(
-                    "A context with this content already exists."
-                )
+            raise serializers.ValidationError({"name": "This name already exists."})
+        # Duplicate context (same context_hash) is handled in the view: it returns
+        # the existing instance with 200 instead of raising here.
         return attrs
 
     def create(self, validated_data):
