@@ -39,22 +39,20 @@ class UpdateContentSerializer(serializers.Serializer):
     version_name = serializers.CharField(required=False, allow_null=True)
 
     def validate(self, val):
-        if (
-            not val.get("instructions")
-            and not val.get("markdown")
-            and val.get("version_name")
-        ):
-            document_version = val.get("document_version")
-            document_version.version_name = val.get("version_name")
-            document_version.save()
-            val["return_old"] = document_version
+        document_version = val.get("document_version")
+        existing_version_name = document_version.version_name
+        existing_markdown = document_version.markdown
+
         if (
             not val.get("instructions")
             and not val.get("markdown")
             and not val.get("version_name")
+        ) or (
+            existing_version_name == val.get("version_name")
+            and existing_markdown == val.get("markdown")
         ):
             raise serializers.ValidationError(
-                "Either instructions, markdown, or version name must be provided"
+                "New instructions, markdown, or version name must be provided"
             )
 
         return val

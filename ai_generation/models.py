@@ -66,11 +66,7 @@ class DocumentVersion(models.Model):
     class Meta:
         constraints = [
             models.UniqueConstraint(
-                fields=["document", "context_hash"],
-                name="unique_context_hash_per_document",
-            ),
-            models.UniqueConstraint(
-                fields=["document", "version_name"],
-                name="unique_version_name_per_document",
+                fields=["document", "context_hash", "version_name"],
+                name="unique_version_document_per_document",
             ),
         ]

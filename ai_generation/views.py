@@ -116,39 +116,31 @@ class UpdateContentView(APIView):
             "document_version_id"
         ].queryset = DocumentVersion.objects.filter(document__user=request.user)
         serializer.is_valid(raise_exception=True)
-        if serializer.validated_data.get("return_old"):
-            document_version = serializer.validated_data.get("return_old")
-        else:
-            document_version = serializer.validated_data["document_version"]
-            markdown = (
-                serializer.validated_data.get("markdown") or document_version.markdown
-            )
-            instructions = serializer.validated_data.get("instructions") or None
-            version_name = serializer.validated_data.get("version_name") or None
-
-            document = document_version.document
+        document_version = serializer.validated_data["document_version"]
+        instructions = serializer.validated_data.get("instructions")
+        version_name = serializer.validated_data.get("version_name")
+        markdown = serializer.validated_data.get("markdown")
+        document = document_version.document
+        kwargs = {"document": document}
+        if version_name:
+            kwargs["version_name"] = version_name
+        if markdown:
+            kwargs["markdown"] = markdown
+        if instructions:
             document_type = document.document_type
-
             try:
-                if instructions:
-                    markdown_response = UpdateContent(
-                        markdown, instructions, document_type, version_name
-                    ).execute()
-                else:
-                    markdown_response = markdown
-                create_kwargs = {
-                    "document": document,
-                    "markdown": markdown_response,
-                }
-                if version_name:
-                    create_kwargs["version_name"] = version_name
-                document_version = DocumentVersion.objects.create(**create_kwargs)
-                serializer = DocumentVersionResponseSerializer(document_version)
-                return Response(serializer.data, status=status.HTTP_200_OK)
+                markdown_response = UpdateContent(
+                    markdown, instructions, document_type, version_name
+                ).execute()
+                markdown_response = markdown
+                kwargs["markdown"] = markdown_response
             except Exception as e:
                 return Response(
                     {"message": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
                 )
+        document_version = DocumentVersion.objects.create(**kwargs)
+        serializer = DocumentVersionResponseSerializer(document_version)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class DocumentViewSet(viewsets.ModelViewSet):
