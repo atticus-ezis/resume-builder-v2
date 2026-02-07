@@ -58,6 +58,18 @@ class UpdateContentSerializer(serializers.Serializer):
         return val
 
 
+class DocumentVersionHistoryResponseSerializer(serializers.ModelSerializer):
+    document_type = serializers.SerializerMethodField()
+
+    def get_document_type(self, obj):
+        return obj.document.document_type
+
+    class Meta:
+        model = DocumentVersion
+        fields = ["id", "version_name", "updated_at", "document_type"]
+        read_only_fields = ["id", "updated_at", "version_name", "document_type"]
+
+
 class DocumentVersionResponseSerializer(serializers.ModelSerializer):
     """Serializer for DocumentVersion response format used across multiple views."""
 
@@ -65,8 +77,8 @@ class DocumentVersionResponseSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = DocumentVersion
-        fields = ["id", "markdown", "document", "version_name", "created_at"]
-        read_only_fields = ["id", "document", "created_at"]
+        fields = ["id", "markdown", "document", "version_name", "updated_at"]
+        read_only_fields = ["id", "document", "updated_at"]
 
     def get_document(self, obj):
         return {
@@ -147,7 +159,19 @@ class DocumentListSerializer(serializers.ModelSerializer):
 
 
 class DocumentVersionSerializer(serializers.ModelSerializer):
+    document_type = serializers.SerializerMethodField()
+
+    def get_document_type(self, obj):
+        return obj.document.document_type
+
     class Meta:
         model = DocumentVersion
-        fields = ["id", "document", "version_name", "markdown", "created_at"]
-        read_only_fields = ["id", "version_name", "created_at"]
+        fields = [
+            "id",
+            "document",
+            "version_name",
+            "markdown",
+            "created_at",
+            "document_type",
+        ]
+        read_only_fields = ["id", "version_name", "created_at", "document_type"]

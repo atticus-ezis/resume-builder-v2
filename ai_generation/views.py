@@ -2,6 +2,7 @@ from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
+from rest_framework.generics import ListAPIView
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -12,6 +13,7 @@ from ai_generation.models import Document, DocumentVersion
 from ai_generation.serializers import (
     DocumentListSerializer,
     DocumentSerializer,
+    DocumentVersionHistoryResponseSerializer,
     DocumentVersionResponseSerializer,
     DocumentVersionSerializer,
     MatchContextSerializer,
@@ -159,21 +161,44 @@ class DocumentViewSet(viewsets.ModelViewSet):
         serializer.save(user=self.request.user)
 
 
-class DocumentVersionViewSet(viewsets.ModelViewSet):
+class DocumentVersionHistory(ListAPIView):
     permission_classes = [IsAuthenticated]
-    pagination_class = PageNumberPagination
-    serializer_class = DocumentVersionSerializer
+    serializer_class = DocumentVersionHistoryResponseSerializer
+    ordering = ["-updated_at"]
 
     def get_queryset(self):
         queryset = DocumentVersion.objects.filter(
             document__user=self.request.user
         ).select_related("document")
-
-        # Filter by document_id if provided
-        document_id = self.request.query_params.get("document", None)
+        document_id = self.request.query_params.get("document")
         if document_id:
             queryset = queryset.filter(document_id=document_id)
+        return queryset
 
+
+class DocumentVersionViewSet(viewsets.ModelViewSet):
+    """
+    List/retrieve document versions. Filter by document: ?document=<document_id>
+    When document is specified, uses DocumentVersionResponseSerializer.
+    """
+
+    permission_classes = [IsAuthenticated]
+    # serializer_class = DocumentVersionResponseSerializer
+    # pagination_class = PageNumberPagination
+    ordering = ["-updated_at"]
+
+    def get_serializer_class(self):
+        if self.action == "list":
+            return DocumentVersionResponseSerializer
+        return DocumentVersionSerializer
+
+    def get_queryset(self):
+        queryset = DocumentVersion.objects.filter(
+            document__user=self.request.user
+        ).select_related("document")
+        document_id = self.request.query_params.get("document")
+        if document_id:
+            queryset = queryset.filter(document_id=document_id)
         return queryset
 
     @action(detail=True, methods=["get"], name="pdf_download", url_path="pdf")

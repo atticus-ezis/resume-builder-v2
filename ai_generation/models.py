@@ -46,6 +46,7 @@ class DocumentVersion(models.Model):
     )
     markdown = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
     version_name = models.CharField(max_length=255, null=True, blank=True)
     context_hash = models.CharField(max_length=64, db_index=True, blank=True, null=True)
 

@@ -47,6 +47,7 @@ from accounts.views import (
     CustomVerifyEmailView,
 )
 from ai_generation.views import (
+    DocumentVersionHistory,
     DocumentVersionViewSet,
     DocumentViewSet,
     GenerateResumeAndCoverLetterView,
@@ -166,6 +167,11 @@ urlpatterns = [
                     "update-content/",
                     UpdateContentView.as_view(),
                     name="update_content",
+                ),
+                path(
+                    "document-version-history/",
+                    DocumentVersionHistory.as_view(),
+                    name="document_version_history",
                 ),
                 path("", include(router.urls)),
             ]
