@@ -119,28 +119,16 @@ class UpdateContentView(APIView):
         ].queryset = DocumentVersion.objects.filter(document__user=request.user)
         serializer.is_valid(raise_exception=True)
         document_version = serializer.validated_data["document_version"]
-        instructions = serializer.validated_data.get("instructions")
-        version_name = serializer.validated_data.get("version_name")
-        markdown = serializer.validated_data.get("markdown")
-        document = document_version.document
-        kwargs = {"document": document}
-        if version_name:
-            kwargs["version_name"] = version_name
-        if markdown:
-            kwargs["markdown"] = markdown
-        if instructions:
-            document_type = document.document_type
-            try:
-                markdown_response = UpdateContent(
-                    markdown, instructions, document_type, version_name
-                ).execute()
-                markdown_response = markdown
-                kwargs["markdown"] = markdown_response
-            except Exception as e:
-                return Response(
-                    {"message": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
-                )
-        document_version = DocumentVersion.objects.create(**kwargs)
+        instructions = serializer.validated_data["instructions"]
+
+        try:
+            markdown_response = UpdateContent(instructions, document_version).execute()
+        except Exception as e:
+            return Response(
+                {"message": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+        document_version.patch(markdown=markdown_response)
+        document_version.save()
         serializer = DocumentVersionResponseSerializer(document_version)
         return Response(serializer.data, status=status.HTTP_200_OK)
 

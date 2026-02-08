@@ -8,6 +8,7 @@ from weasyprint import HTML
 from ai_generation.constants import (
     COMMAND_TO_READABLE_COMMAND,
 )
+from ai_generation.models import DocumentVersion
 from applicant_profile.models import UserContext
 from job_profile.models import JobDescription
 from resume_builder.settings import OPENAI_API_KEY
@@ -97,19 +98,20 @@ class APICall:
 
 
 class UpdateContent:
-    def __init__(self, content: str, instructions: str, document_type: str):
-        self.content = content
+    def __init__(self, instructions: str, document_version: DocumentVersion):
+        self.markdown = document_version.markdown
         self.instructions = instructions
+        self.document_type = document_version.document.document_type
         self.client = OpenAI(api_key=OPENAI_API_KEY)
         self.model = "gpt-4o-mini"
-        self.document_type = document_type
+        self.document_type = document_version.document.document_type
         self.content_type = "markdown"
 
     def get_prompt(self):
         prompt = (
             f"Update the following {self.content_type} based on the instructions\n\n"
             "=== ORIGINAL CONTENT ===\n"
-            f"{self.content}\n\n"
+            f"{self.markdown}\n\n"
             "=== INSTRUCTIONS ===\n"
             f"{self.instructions}\n\n"
             f"- Return as {self.content_type} for clean export.\n"
@@ -117,7 +119,7 @@ class UpdateContent:
             "content only for immediate export.\n"
         )
         role_description = (
-            f"You are a {self.content_type} editor."
+            f"You are a {self.document_type} editor."
             "change the content to align with the instructions provided."
             f"maintain the {self.content_type} format."
             f"Return only the transformed {self.content_type} content — no summaries, commentary, or extra text. "

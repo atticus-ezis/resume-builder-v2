@@ -29,31 +29,16 @@ class MatchContextSerializer(serializers.Serializer):
 
 
 class UpdateContentSerializer(serializers.Serializer):
-    markdown = serializers.CharField(required=False, allow_null=True)
     document_version_id = serializers.PrimaryKeyRelatedField(
         queryset=DocumentVersion.objects.none(),
         source="document_version",
         required=True,
     )
     instructions = serializers.CharField(required=False, allow_null=True)
-    version_name = serializers.CharField(required=False, allow_null=True)
 
     def validate(self, val):
-        document_version = val.get("document_version")
-        existing_version_name = document_version.version_name
-        existing_markdown = document_version.markdown
-
-        if (
-            not val.get("instructions")
-            and not val.get("markdown")
-            and not val.get("version_name")
-        ) or (
-            existing_version_name == val.get("version_name")
-            and existing_markdown == val.get("markdown")
-        ):
-            raise serializers.ValidationError(
-                "New instructions, markdown, or version name must be provided"
-            )
+        if not val.get("instructions"):
+            raise serializers.ValidationError("New instructions, must be provided")
 
         return val
 
