@@ -15,7 +15,6 @@ from ai_generation.serializers import (
     DocumentSerializer,
     DocumentVersionHistoryResponseSerializer,
     DocumentVersionResponseSerializer,
-    DocumentVersionSerializer,
     MatchContextSerializer,
     UpdateContentSerializer,
 )
@@ -171,22 +170,16 @@ class DocumentVersionViewSet(viewsets.ModelViewSet):
     """
 
     permission_classes = [IsAuthenticated]
-    # serializer_class = DocumentVersionResponseSerializer
-    # pagination_class = PageNumberPagination
-    ordering = ["-updated_at"]
-
-    def get_serializer_class(self):
-        if self.action == "list":
-            return DocumentVersionResponseSerializer
-        return DocumentVersionSerializer
+    serializer_class = DocumentVersionResponseSerializer
+    ordering = ["-created_at"]
 
     def get_queryset(self):
         queryset = DocumentVersion.objects.filter(
             document__user=self.request.user
         ).select_related("document")
-        document_id = self.request.query_params.get("document")
-        if document_id:
-            queryset = queryset.filter(document_id=document_id)
+        # document_id = self.request.query_params.get("document")
+        # if document_id:
+        #     queryset = queryset.filter(document_id=document_id)
         return queryset
 
     @action(detail=True, methods=["get"], name="pdf_download", url_path="pdf")
