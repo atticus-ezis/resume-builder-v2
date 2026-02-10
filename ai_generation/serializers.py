@@ -71,38 +71,7 @@ class DocumentVersionResponseSerializer(serializers.ModelSerializer):
         try:
             return super().create(validated_data)
         except IntegrityError as e:
-            return handle_document_version_integrity(e)
-
-
-class DownloadMarkdownSerializer(serializers.Serializer):
-    document_version_id = serializers.PrimaryKeyRelatedField(
-        queryset=DocumentVersion.objects.none(),
-        source="document_version",
-        required=True,
-    )
-
-    def validate(self, val):
-        return create_new_version_if_needed(val)
-
-
-def create_new_version_if_needed(val):
-    document_version = val.get("document_version")
-    markdown = val.get("markdown")
-    document = document_version.document
-
-    if not markdown or markdown.strip() == "":
-        return val
-
-    if document_version.markdown.strip() != markdown.strip():
-        create_new_document_version = DocumentVersion.objects.create(
-            document=document,
-            markdown=markdown,
-        )
-        document_version = create_new_document_version
-
-        val["document_version"] = document_version
-
-    return val
+            return handle_integrity_error(e)
 
 
 class DocumentSerializer(serializers.ModelSerializer):
@@ -116,6 +85,12 @@ class DocumentSerializer(serializers.ModelSerializer):
 
     def get_drafts(self, obj):
         return obj.versions.count()
+
+    def create(self, validated_data):
+        try:
+            return super().create(validated_data)
+        except IntegrityError as e:
+            return handle_integrity_error(e)
 
     class Meta:
         model = Document
@@ -145,26 +120,26 @@ class DocumentListSerializer(serializers.ModelSerializer):
         return obj.job_description.job_position
 
 
-class DocumentVersionSerializer(serializers.ModelSerializer):
-    document_type = serializers.SerializerMethodField()
+# class DocumentVersionSerializer(serializers.ModelSerializer):
+#     document_type = serializers.SerializerMethodField()
 
-    def get_document_type(self, obj):
-        return obj.document.document_type
+#     def get_document_type(self, obj):
+#         return obj.document.document_type
 
-    class Meta:
-        model = DocumentVersion
-        fields = [
-            "id",
-            "document",
-            "version_name",
-            "markdown",
-            "created_at",
-            "document_type",
-        ]
-        read_only_fields = ["id", "version_name", "created_at", "document_type"]
+#     class Meta:
+#         model = DocumentVersion
+#         fields = [
+#             "id",
+#             "document",
+#             "version_name",
+#             "markdown",
+#             "created_at",
+#             "document_type",
+#         ]
+#         read_only_fields = ["id", "version_name", "created_at", "document_type"]
 
 
-def handle_document_version_integrity(exc):
+def handle_integrity_error(exc):
     msg = str(exc)
     if "unique_name_per_document" in msg:
         raise serializers.ValidationError(
@@ -173,5 +148,9 @@ def handle_document_version_integrity(exc):
     if "unique_markdown_per_document" in msg:
         raise serializers.ValidationError(
             "A version with this markdown already exists for this document"
+        )
+    if "unique_document_type_per_user_context_and_job_description" in msg:
+        raise serializers.ValidationError(
+            "A document with this type already exists for this user, job description and personal info"
         )
     raise serializers.ValidationError(msg)

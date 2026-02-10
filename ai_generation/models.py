@@ -35,7 +35,7 @@ class Document(models.Model):
         constraints = [
             models.UniqueConstraint(
                 fields=["user", "user_context", "job_description", "document_type"],
-                name="unique_job_per_user",
+                name="unique_document_type_per_user_context_and_job_description",
             )
         ]
 
