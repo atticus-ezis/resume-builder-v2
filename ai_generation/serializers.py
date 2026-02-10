@@ -1,7 +1,7 @@
 from django.db import IntegrityError
 from rest_framework import serializers
 
-from ai_generation.constants import COMMAND_CHOICES, COMMAND_TO_DOCUMENT_TYPES
+from ai_generation.constants import COMMAND_CHOICES
 from ai_generation.models import Document, DocumentVersion
 from applicant_profile.models import UserContext
 from job_profile.models import JobDescription
@@ -16,17 +16,7 @@ class MatchContextSerializer(serializers.Serializer):
     )
     command = serializers.ChoiceField(choices=COMMAND_CHOICES, required=True)
 
-    commands = serializers.SerializerMethodField()
-
-    def get_commands(self, obj):
-        command = obj.get("command")
-        if command in COMMAND_CHOICES:
-            commands = COMMAND_TO_DOCUMENT_TYPES[command]
-        else:
-            raise serializers.ValidationError(
-                "Invalid command, must select from: generate_resume, generate_cover_letter, generate_both"
-            )
-        return commands
+    regenerate_version = serializers.BooleanField(required=False, default=False)
 
 
 class UpdateContentSerializer(serializers.Serializer):
@@ -49,6 +39,13 @@ class DocumentVersionHistoryResponseSerializer(serializers.ModelSerializer):
         model = DocumentVersion
         fields = ["id", "version_name", "updated_at"]
         read_only_fields = ["id", "updated_at", "version_name"]
+
+
+class DocumentVersionRequestSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DocumentVersion
+        fields = ["id", "markdown", "version_name", "document"]
+        read_only_fields = ["id"]
 
 
 class DocumentVersionResponseSerializer(serializers.ModelSerializer):
@@ -75,12 +72,18 @@ class DocumentVersionResponseSerializer(serializers.ModelSerializer):
 
 
 class DocumentSerializer(serializers.ModelSerializer):
-    content = serializers.SerializerMethodField()
-    draft_count = serializers.SerializerMethodField()
+    final_version = serializers.SerializerMethodField()
+    versions_count = serializers.SerializerMethodField()
 
-    def get_content(self, obj):
+    def get_final_version(self, obj):
         if obj.final_version:
-            return obj.final_version.markdown
+            return {
+                "id": obj.final_version.id,
+                "version_name": obj.final_version.version_name,
+                "markdown": obj.final_version.markdown,
+                "created_at": obj.final_version.created_at,
+                "updated_at": obj.final_version.updated_at,
+            }
         return None
 
     def get_drafts(self, obj):
@@ -99,9 +102,10 @@ class DocumentSerializer(serializers.ModelSerializer):
             "job_description",
             "user_context",
             "document_type",
-            "content",
-            "draft_count",
             "created_at",
+            "updated_at",
+            "final_version",
+            "versions_count",
         ]
 
 

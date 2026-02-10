@@ -44,7 +44,7 @@ class DocumentVersion(models.Model):
     document = models.ForeignKey(
         Document, on_delete=models.CASCADE, related_name="versions"
     )
-    markdown = models.TextField()
+    markdown = models.TextField(null=False, blank=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     version_name = models.CharField(max_length=255, null=True, blank=True)

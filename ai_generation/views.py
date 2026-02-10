@@ -25,6 +25,7 @@ from ai_generation.services import (  # noqa: F401
 )
 from applicant_profile.models import UserContext
 from job_profile.models import JobDescription
+from resume_builder.utils import compute_context_hash
 
 # Create your views here.
 
@@ -49,43 +50,54 @@ class GenerateResumeAndCoverLetterView(APIView):
         # ]
         # return Response(pretend_response, status=status.HTTP_200_OK)
 
-        user_context, job_description, commands = self.get_context(request)
+        request_data = self.get_context(request)
+        regenerate_version = request_data.get("regenerate_version", False)
+        commands = COMMAND_TO_DOCUMENT_TYPES[request_data["command"]]
         response_data = []
         for command in commands:
-            generate_new_version = True
-            # command can be both
-            document, document_created = Document.objects.get_or_create(
+            message = ""
+            document, _ = Document.objects.get_or_create(
                 user=request.user,
-                user_context=user_context,
-                job_description=job_description,
+                user_context=request_data["user_context"],
+                job_description=request_data["job_description"],
                 document_type=command,
             )
-            if not document_created:
-                existing_document_version = (
-                    document.final_version
-                    or document.versions.order_by("created_at").last()
-                )
-                if existing_document_version:
-                    document_version = existing_document_version
-                    generate_new_version = False
 
-            if generate_new_version:
+            document_version = None
+            if not regenerate_version:
+                existing = (
+                    document.final_version
+                    or document.versions.order_by("-updated_at").first()
+                )
+                if existing and existing.markdown:
+                    document_version = existing
+                    message = "returned existing document"
+
+            if document_version is None:
                 try:
                     chat_responses = APICall(
-                        user_context, job_description, command
+                        request_data["user_context"],
+                        request_data["job_description"],
+                        command,
                     ).execute()
                 except Exception as e:
                     return Response(
                         {"detail": "AI Request Failed", "message": str(e)},
                         status=status.HTTP_500_INTERNAL_SERVER_ERROR,
                     )
-
-                document_version = DocumentVersion.objects.create(
+                context_hash = compute_context_hash(chat_responses)
+                document_version, _ = DocumentVersion.objects.get_or_create(
                     document=document,
-                    markdown=chat_responses,
+                    context_hash=context_hash,
+                    defaults={"markdown": chat_responses},
                 )
+                message = "returned regenerated document"
+
             serializer = DocumentVersionResponseSerializer(document_version)
-            response_data.append(serializer.data)
+            item = {"document_version": serializer.data}
+            if message:
+                item["message"] = message
+            response_data.append(item)
         return Response(response_data, status=status.HTTP_200_OK)
 
     def get_context(self, request):
@@ -100,12 +112,7 @@ class GenerateResumeAndCoverLetterView(APIView):
         ].queryset = JobDescription.objects.filter(user=request.user)
 
         serializer.is_valid(raise_exception=True)
-        user_context = serializer.validated_data["user_context"]
-        job_description = serializer.validated_data["job_description"]
-        command = serializer.validated_data["command"]
-        commands = COMMAND_TO_DOCUMENT_TYPES[command]
-
-        return user_context, job_description, commands
+        return serializer.validated_data
 
 
 class UpdateContentView(APIView):
