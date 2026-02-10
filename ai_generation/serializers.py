@@ -1,3 +1,4 @@
+from django.db import IntegrityError
 from rest_framework import serializers
 
 from ai_generation.constants import COMMAND_CHOICES, COMMAND_TO_DOCUMENT_TYPES
@@ -65,6 +66,12 @@ class DocumentVersionResponseSerializer(serializers.ModelSerializer):
             "id": obj.document.id,
             "type": obj.document.document_type,
         }
+
+    def create(self, validated_data):
+        try:
+            return super().create(validated_data)
+        except IntegrityError as e:
+            return handle_document_version_integrity(e)
 
 
 class DownloadMarkdownSerializer(serializers.Serializer):
@@ -155,3 +162,16 @@ class DocumentVersionSerializer(serializers.ModelSerializer):
             "document_type",
         ]
         read_only_fields = ["id", "version_name", "created_at", "document_type"]
+
+
+def handle_document_version_integrity(exc):
+    msg = str(exc)
+    if "unique_name_per_document" in msg:
+        raise serializers.ValidationError(
+            "A version with this name already exists for this document"
+        )
+    if "unique_markdown_per_document" in msg:
+        raise serializers.ValidationError(
+            "A version with this markdown already exists for this document"
+        )
+    raise serializers.ValidationError(msg)
