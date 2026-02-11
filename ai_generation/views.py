@@ -1,9 +1,8 @@
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
-from rest_framework import status, viewsets
+from rest_framework import filters, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.generics import ListAPIView
-from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -25,6 +24,7 @@ from ai_generation.services import (  # noqa: F401
 )
 from applicant_profile.models import UserContext
 from job_profile.models import JobDescription
+from resume_builder.pagination import CustomPageNumberPagination
 from resume_builder.utils import compute_context_hash
 
 # Create your views here.
@@ -36,20 +36,6 @@ class GenerateResumeAndCoverLetterView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        # pretend_response = [
-        #     {
-        #         "markdown": "test resume hello world",
-        #         "document": {"id": 1, "type": "resume"},
-        #         "document_version": {"id": 1, "version": 1},
-        #     },
-        #     {
-        #         "markdown": "test cover letter hello mrs hiring manager",
-        #         "document": {"id": 2, "type": "cover_letter"},
-        #         "document_version": {"id": 2, "version": 1},
-        #     },
-        # ]
-        # return Response(pretend_response, status=status.HTTP_200_OK)
-
         request_data = self.get_context(request)
         regenerate_version = request_data.get("regenerate_version", False)
         commands = COMMAND_TO_DOCUMENT_TYPES[request_data["command"]]
@@ -71,7 +57,7 @@ class GenerateResumeAndCoverLetterView(APIView):
                 )
                 if existing and existing.markdown:
                     document_version = existing
-                    message = "found an existing document"
+                    message = "Found an existing document on file"
 
             if document_version is None:
                 try:
@@ -94,12 +80,8 @@ class GenerateResumeAndCoverLetterView(APIView):
                     context_hash=context_hash,
                     defaults={"markdown": chat_responses},
                 )
-                if version_created:
-                    message = "regenerated a new document"
-                else:
-                    message = (
-                        "the contents of the regenrated document match the original"
-                    )
+                if not version_created:
+                    message = "The contents of the regenrated document match the original. Consider adding additional instructions."
 
             serializer = DocumentVersionResponseSerializer(document_version)
             item = {"document_version": serializer.data}
@@ -151,7 +133,10 @@ class UpdateContentView(APIView):
 
 class DocumentViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
-    pagination_class = PageNumberPagination
+    pagination_class = CustomPageNumberPagination
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ["job_description__company_name", "job_description__job_position"]
+    ordering_fields = ["created_at"]
 
     def get_queryset(self):
         return Document.objects.filter(user=self.request.user)
@@ -168,6 +153,7 @@ class DocumentViewSet(viewsets.ModelViewSet):
 class DocumentVersionHistory(ListAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = DocumentVersionHistoryResponseSerializer
+    filter_backends = [filters.OrderingFilter]
     ordering = ["-updated_at"]
 
     def get_queryset(self):

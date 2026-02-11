@@ -73,21 +73,37 @@ class DocumentVersionResponseSerializer(serializers.ModelSerializer):
 
 class DocumentSerializer(serializers.ModelSerializer):
     final_version = serializers.SerializerMethodField()
-    versions_count = serializers.SerializerMethodField()
+    versions = serializers.SerializerMethodField()
+    company_name = serializers.SerializerMethodField()
+    job_position = serializers.SerializerMethodField()
+
+    def get_company_name(self, obj):
+        return obj.job_description.company_name
+
+    def get_job_position(self, obj):
+        return obj.job_description.job_position
 
     def get_final_version(self, obj):
         if obj.final_version:
             return {
                 "id": obj.final_version.id,
                 "version_name": obj.final_version.version_name,
-                "markdown": obj.final_version.markdown,
                 "created_at": obj.final_version.created_at,
                 "updated_at": obj.final_version.updated_at,
             }
         return None
 
-    def get_drafts(self, obj):
-        return obj.versions.count()
+    def get_versions(self, obj):
+        versions = obj.versions.all().order_by("-created_at")
+        return [
+            {
+                "id": version.id,
+                "version_name": version.version_name,
+                "created_at": version.created_at,
+                "updated_at": version.updated_at,
+            }
+            for version in versions
+        ]
 
     def create(self, validated_data):
         try:
@@ -99,13 +115,12 @@ class DocumentSerializer(serializers.ModelSerializer):
         model = Document
         fields = [
             "id",
-            "job_description",
-            "user_context",
+            "company_name",
+            "job_position",
             "document_type",
             "created_at",
-            "updated_at",
             "final_version",
-            "versions_count",
+            "versions",
         ]
 
 
@@ -115,32 +130,19 @@ class DocumentListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Document
-        fields = ["id", "document_type", "company_name", "job_position"]
+        fields = [
+            "id",
+            "document_type",
+            "company_name",
+            "job_position",
+            "created_at",
+        ]
 
     def get_company_name(self, obj):
         return obj.job_description.company_name
 
     def get_job_position(self, obj):
         return obj.job_description.job_position
-
-
-# class DocumentVersionSerializer(serializers.ModelSerializer):
-#     document_type = serializers.SerializerMethodField()
-
-#     def get_document_type(self, obj):
-#         return obj.document.document_type
-
-#     class Meta:
-#         model = DocumentVersion
-#         fields = [
-#             "id",
-#             "document",
-#             "version_name",
-#             "markdown",
-#             "created_at",
-#             "document_type",
-#         ]
-#         read_only_fields = ["id", "version_name", "created_at", "document_type"]
 
 
 def handle_integrity_error(exc):
