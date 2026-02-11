@@ -7,6 +7,8 @@ Change the site domain instead of "example.com" to the actual frontend domain
 To Optimize:
 Figure out a way to make the homepage load quicker. Add redis. Consider submitting and saving one large request instead of three. Compare results.
 
+when generating new. The history must be updated
+
 # created test user
 
 > > > test_user = User.objects.create(email="test@gmail.com", password="Panda911")

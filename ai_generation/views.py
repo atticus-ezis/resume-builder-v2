@@ -56,7 +56,7 @@ class GenerateResumeAndCoverLetterView(APIView):
         response_data = []
         for command in commands:
             message = ""
-            document, _ = Document.objects.get_or_create(
+            document, created = Document.objects.get_or_create(
                 user=request.user,
                 user_context=request_data["user_context"],
                 job_description=request_data["job_description"],
@@ -64,14 +64,14 @@ class GenerateResumeAndCoverLetterView(APIView):
             )
 
             document_version = None
-            if not regenerate_version:
+            if not regenerate_version and not created:
                 existing = (
                     document.final_version
                     or document.versions.order_by("-updated_at").first()
                 )
                 if existing and existing.markdown:
                     document_version = existing
-                    message = "returned existing document"
+                    message = "found an existing document"
 
             if document_version is None:
                 try:
@@ -86,12 +86,20 @@ class GenerateResumeAndCoverLetterView(APIView):
                         status=status.HTTP_500_INTERNAL_SERVER_ERROR,
                     )
                 context_hash = compute_context_hash(chat_responses)
-                document_version, _ = DocumentVersion.objects.get_or_create(
+                (
+                    document_version,
+                    version_created,
+                ) = DocumentVersion.objects.get_or_create(
                     document=document,
                     context_hash=context_hash,
                     defaults={"markdown": chat_responses},
                 )
-                message = "returned regenerated document"
+                if version_created:
+                    message = "regenerated a new document"
+                else:
+                    message = (
+                        "the contents of the regenrated document match the original"
+                    )
 
             serializer = DocumentVersionResponseSerializer(document_version)
             item = {"document_version": serializer.data}
@@ -133,9 +141,11 @@ class UpdateContentView(APIView):
             return Response(
                 {"message": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
-        document_version.patch(markdown=markdown_response)
-        document_version.save()
-        serializer = DocumentVersionResponseSerializer(document_version)
+        new_version, _ = DocumentVersion.objects.get_or_create(
+            document=document_version.document,
+            markdown=markdown_response,
+        )
+        serializer = DocumentVersionResponseSerializer(new_version)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 

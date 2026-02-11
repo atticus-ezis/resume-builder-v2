@@ -29,7 +29,7 @@ class Document(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"{self.job_description.company_name} - {self.document_type}"
+        return f"{self.job_description.company_name} - {self.job_description.job_position} - {self.document_type}"
 
     class Meta:
         constraints = [
