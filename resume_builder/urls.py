@@ -42,6 +42,7 @@ from rest_framework_simplejwt.views import TokenVerifyView
 
 from accounts.views import (
     CSRFExemptLoginView,
+    CustomLogoutView,
     # CustomPasswordResetConfirmView,
     # CustomRegisterView,
     CustomVerifyEmailView,
@@ -72,7 +73,9 @@ def validate_user(request):
         return Response(
             status=status.HTTP_200_OK, data={"email": user.email, "id": user.pk}
         )
-    return Response(status=status.HTTP_401_UNAUTHORIZED)
+    return Response(
+        status=status.HTTP_401_UNAUTHORIZED, data={"detail": "use is not authenticated"}
+    )
 
 
 urlpatterns = [
@@ -119,6 +122,7 @@ urlpatterns = [
                                 CSRFExemptLoginView.as_view(),
                                 name="login",
                             ),
+                            path("logout/", CustomLogoutView.as_view(), name="logout"),
                             path(
                                 "user/", UserDetailsView.as_view(), name="user_details"
                             ),
