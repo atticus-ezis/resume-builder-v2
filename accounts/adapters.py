@@ -7,17 +7,17 @@ class CustomAccountAdapter(DefaultAccountAdapter):
         if "email_confirmation" in template_prefix:
             if "key" in context:
                 key = context["key"]
-                context["activate_url"] = (
-                    f"{settings.FRONTEND_DOMAIN}/account/register/verify-email/{key}"
-                )
+                context[
+                    "activate_url"
+                ] = f"{settings.FRONTEND_DOMAIN}/account/register/verify-email/{key}"
 
         if "password_reset_key" in template_prefix:
             old_url = context.get("password_reset_url")
             token = old_url.split("/")[-2]
             uid = old_url.split("/")[-3]
 
-            context["password_reset_url"] = (
-                f"{settings.FRONTEND_DOMAIN}/users/password/reset/{uid}/{token}"
-            )
+            context[
+                "password_reset_url"
+            ] = f"{settings.FRONTEND_DOMAIN}/account/confirm-password/{uid}/{token}"
 
         return super().send_mail(template_prefix, email, context)

@@ -110,13 +110,6 @@ urlpatterns = [
                                 CustomVerifyEmailView.as_view(),
                                 name="custom_verify_email",
                             ),
-                            # path(
-                            #     "registration/verify-email/",  # requires session ID cookie
-                            #     VerifyEmailView.as_view(),
-                            #     name="custom_verify_email",
-                            # ),
-                            # basic
-                            # path("login/", LoginView.as_view(), name="login"),
                             path(
                                 "login/",
                                 CSRFExemptLoginView.as_view(),
