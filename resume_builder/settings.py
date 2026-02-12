@@ -214,14 +214,20 @@ else:
     # Default to PostgreSQL
     DATABASES = {
         "default": {
-            "ENGINE": "django.db.backends.postgresql",
-            "NAME": env.str("POSTGRES_DB", default="resume_builder"),
-            "USER": env.str("POSTGRES_USER", default="postgres"),
-            "PASSWORD": env.str("POSTGRES_PASSWORD", default="postgres"),
-            "HOST": env.str("DB_HOST", default="127.0.0.1"),
-            "PORT": env.str("DB_PORT", default="5432"),
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "db.sqlite3",
         }
     }
+    # DATABASES = {
+    #     "default": {
+    #         "ENGINE": "django.db.backends.postgresql",
+    #         "NAME": env.str("POSTGRES_DB", default="resume_builder"),
+    #         "USER": env.str("POSTGRES_USER", default="postgres"),
+    #         "PASSWORD": env.str("POSTGRES_PASSWORD", default="postgres"),
+    #         "HOST": env.str("DB_HOST", default="127.0.0.1"),
+    #         "PORT": env.str("DB_PORT", default="5432"),
+    #     }
+    # }
 
 
 # Password validation

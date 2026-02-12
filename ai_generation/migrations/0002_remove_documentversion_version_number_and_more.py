@@ -9,11 +9,7 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RemoveField(
-            model_name="documentversion",
-            name="version_name",
-        ),
-        migrations.AddField(
+        migrations.AlterField(
             model_name="documentversion",
             name="version_name",
             field=models.CharField(blank=True, max_length=255, null=True),
