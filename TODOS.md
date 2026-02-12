@@ -16,3 +16,8 @@ when generating new. The history must be updated
 > > > EmailAddress.objects.create(user=test_user, email=test_user.email, verified=True)
 > > > from job_profile.models import JobDescription
 > > > test_jd = JobDescription.objects.create(user=test_user, company_name="Sleep Works", job_position="CEO", job_context="Must be bald and angry")
+
+"email": "test@gmail.com",
+"email_verified": false,
+
+is this true?

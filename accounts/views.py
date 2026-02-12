@@ -7,9 +7,25 @@ from dj_rest_auth.views import LoginView, LogoutView
 from django.conf import settings
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
-from rest_framework.permissions import AllowAny
+from rest_framework.generics import RetrieveAPIView
+from rest_framework.permissions import AllowAny, IsAuthenticated
+
+from accounts.serializers import UserProfileSerializer
 
 logger = logging.getLogger(__name__)
+
+
+class UserProfileView(RetrieveAPIView):
+    """
+    GET /api/accounts/profile/ — returns the authenticated user's profile
+    as specified by UserProfileSerializer. No pk in URL; uses request.user.
+    """
+
+    serializer_class = UserProfileSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_object(self):
+        return self.request.user
 
 
 class CSRFExemptLoginView(LoginView):

@@ -46,6 +46,7 @@ from accounts.views import (
     # CustomPasswordResetConfirmView,
     # CustomRegisterView,
     CustomVerifyEmailView,
+    UserProfileView,
 )
 from ai_generation.views import (
     DocumentVersionHistory,
@@ -93,6 +94,7 @@ urlpatterns = [
                     "accounts/",
                     include(
                         [
+                            path("profile/", UserProfileView.as_view(), name="profile"),
                             path("validate-user/", validate_user, name="validate_user"),
                             # registration / confirm email
                             path(
