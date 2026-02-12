@@ -3,7 +3,7 @@ from django.urls import reverse
 from rest_framework import status
 
 from ai_generation.models import Document, DocumentVersion
-from ai_generation.serializers import handle_document_version_integrity
+from ai_generation.serializers import handle_integrity_error
 from ai_generation.tests.factory import DocumentFactory, DocumentVersionFactory
 from applicant_profile.tests.factory import UserContextFactory
 from job_profile.tests.factories import JobDescriptionFactory
@@ -42,7 +42,10 @@ class TestDuplicateDoc:
 
         assert response.status_code == status.HTTP_200_OK
         assert len(response.data) == 1
-        assert response.data[0]["id"] == existing_document_version.id
+        assert (
+            response.data[0]["document_version"]["id"] == existing_document_version.id
+        )
+        assert response.data[0]["document_version"]["markdown"] == "test markdown"
 
     def test_integrity_error_raises_validation_error(self, authenticated_client):
         """Duplicate (document, version_name) or (document, context_hash) is caught and converted to ValidationError."""
@@ -76,7 +79,7 @@ class TestDuplicateDoc:
                 )
         assert isinstance(exc_info.value, IntegrityError)
         with pytest.raises(Exception) as validation_error:
-            handle_document_version_integrity(exc_info.value)
+            handle_integrity_error(exc_info.value)
         detail = getattr(validation_error.value, "detail", str(validation_error.value))
         assert "name" in str(detail).lower()
 
@@ -95,7 +98,7 @@ class TestDuplicateDoc:
                 )
         assert isinstance(exc_info2.value, IntegrityError)
         with pytest.raises(Exception) as validation_error2:
-            handle_document_version_integrity(exc_info2.value)
+            handle_integrity_error(exc_info2.value)
         detail2 = getattr(
             validation_error2.value, "detail", str(validation_error2.value)
         )
