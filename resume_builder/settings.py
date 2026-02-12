@@ -55,6 +55,7 @@ SECRET_KEY = env.str(
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env.bool("DEBUG", default=True)
 
+# For Gunicorn: set ALLOWED_HOSTS to your domain(s) in production, or keep default for local/Docker.
 ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=["0.0.0.0", "localhost", "127.0.0.1"])
 
 CORS_ALLOWED_ORIGINS = [FRONTEND_DOMAIN, "http://localhost:3000"]
@@ -205,7 +206,7 @@ db_url = env.str("DATABASE_URL", default=None)
 if db_url:
     db_config = dj_database_url.parse(db_url, conn_max_age=600)
     db_config["OPTIONS"] = {
-        "sslmode": "require",
+        "sslmode": "disable" if DEBUG else "require",
     }
     DATABASES = {
         "default": db_config,

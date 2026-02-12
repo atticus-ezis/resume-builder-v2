@@ -478,6 +478,18 @@ woff = [
 ]
 
 [[package]]
+name = "gunicorn"
+version = "25.0.3"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "packaging" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/f3/e5/e1d2225d2b75fe4988821715d2c526fdf7b39f4a7260aa7e2bb4b25ec65c/gunicorn-25.0.3.tar.gz", hash = "sha256:b53a7fff1a07b825b962af320554de44ae77a26abfa373711ff3f83d57d3506d", size = 9702357, upload-time = "2026-02-07T16:53:52.72Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/5e/84/117f39896ded517149be72d16c02252885690e9b0d1b84281944928f61aa/gunicorn-25.0.3-py3-none-any.whl", hash = "sha256:aca364c096c81ca11acd4cede0aaeea91ba76ca74e2c0d7f879154db9d890f35", size = 171728, upload-time = "2026-02-07T16:53:49.546Z" },
+]
+
+[[package]]
 name = "h11"
 version = "0.16.0"
 source = { registry = "https://pypi.org/simple" }
@@ -1039,6 +1051,7 @@ dependencies = [
     { name = "drf-spectacular" },
     { name = "environ" },
     { name = "factory-boy" },
+    { name = "gunicorn" },
     { name = "markdown" },
     { name = "openai" },
     { name = "pre-commit" },
@@ -1062,6 +1075,7 @@ requires-dist = [
     { name = "drf-spectacular", specifier = ">=0.29.0" },
     { name = "environ", specifier = ">=1.0" },
     { name = "factory-boy", specifier = ">=3.3.3" },
+    { name = "gunicorn", specifier = ">=25.0.3" },
     { name = "markdown", specifier = ">=3.10" },
     { name = "openai", specifier = ">=2.9.0" },
     { name = "pre-commit", specifier = ">=4.5.1" },
