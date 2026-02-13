@@ -28,7 +28,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
         ]
 
     def get_application_count(self, obj):
-        return obj.documents.count()
+        return obj.documents.values("job_description_id").distinct().count()
 
     def get_email_verified(self, obj):
         return obj.emailaddress_set.filter(verified=True).exists()

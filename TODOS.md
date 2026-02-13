@@ -1,3 +1,7 @@
+group cover letter + resume as single application
+
+check by running the docker gunicorn service and see if frontend can connect.
+
 Important Checks:
 make sure the same generation doesn't occur twice. If the combination of job and application exist, search for an existing document before regenerating.
 
