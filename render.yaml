@@ -1,7 +1,0 @@
-services:
-  - type: web
-    name: ats-resume-builder
-    env: docker
-    repo: https://github.com/atticus-ezis/resume-builder-v2
-    branch: main
-    autoDeploy: true
