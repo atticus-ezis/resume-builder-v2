@@ -217,7 +217,7 @@ WSGI_APPLICATION = "resume_builder.wsgi.application"
 
 db_url = env.str("DATABASE_URL", default=None)
 if db_url:
-    DATABASES = dj_database_url.parse(db_url, conn_max_age=600)
+    DATABASES = {"default": dj_database_url.parse(db_url, conn_max_age=600)}
 else:
     # Default to PostgreSQL
     DATABASES = {
