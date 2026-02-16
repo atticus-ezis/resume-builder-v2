@@ -18,8 +18,8 @@ RUN uv sync --no-install-project
 COPY . .
 RUN uv sync
 
-# Runtime stage
-FROM python:3.13-slim
+# Runtime stage (same registry as builder to avoid Docker Hub timeouts)
+FROM ghcr.io/astral-sh/uv:python3.13-bookworm-slim
 
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1
