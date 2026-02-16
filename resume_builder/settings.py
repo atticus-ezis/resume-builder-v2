@@ -41,13 +41,7 @@ if local_env.exists():
     environ.Env.read_env(local_env)
 
 FRONTEND_DOMAIN = env.str("FRONTEND_DOMAIN", "http://localhost:3000")
-OPENAI_API_KEY = env.str("OPENAI_API_KEY", "")
-
-
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
-
-# SECURITY WARNING: keep the secret key used in production secret!
+OPENAI_API_KEY = env.str("OPENAI_API_KEY", "fake-key-123")
 SECRET_KEY = env.str(
     "SECRET_KEY", "django-insecure-r1&!0o!v%&y1-2h0*$e%&46(jcxr3k7vdzu7k2yxf^um0e=^8a"
 )
@@ -56,11 +50,19 @@ SECRET_KEY = env.str(
 DEBUG = env.bool("DEBUG", default=True)
 
 # For Gunicorn: set ALLOWED_HOSTS to your domain(s) in production, or keep default for local/Docker.
-ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=["0.0.0.0", "localhost", "127.0.0.1"])
+ALLOWED_HOSTS = env.list(
+    "ALLOWED_HOSTS",
+    default=[
+        "0.0.0.0",
+        "localhost",
+        "127.0.0.1",
+        "ats-resume-builder.com",
+        "api.ats-resume-builder.com",
+    ],
+)
 
 CORS_ALLOWED_ORIGINS = [FRONTEND_DOMAIN, "http://localhost:3000"]
-CORS_ALLOW_CREDENTIALS = True  # Required for JWT cookies
-
+CORS_ALLOW_CREDENTIALS = True
 CSRF_TRUSTED_ORIGINS = [FRONTEND_DOMAIN, "http://localhost:3000"]
 
 
@@ -96,7 +98,9 @@ INSTALLED_APPS = [
     "drf_spectacular",
 ]
 
-# for allauth
+## CONFIGURE FOR DEBUG
+SITE_DOMAIN = "ats-resume-builder.com"
+SITE_NAME = "Resume Builder"
 SITE_ID = 1
 
 # rest framework (use jwt as default)
@@ -148,15 +152,24 @@ ACCOUNT_UNIQUE_EMAIL = True
 ACCOUNT_EMAIL_VERIFICATION = "mandatory"
 ACCOUNT_ADAPTER = "accounts.adapters.CustomAccountAdapter"
 ACCOUNT_DEFAULT_HTTP_PROTOCOL = env.str("HTTP_PROTOCOL", "http")
-
-# ACCOUNT_EMAIL_CONFIRMATION_ANONYMOUS_REDIRECT_URL = env.str("EMAIL_REDIRECT")
-# ACCOUNT_EMAIL_CONFIRMATION_AUTHENTICATED_REDIRECT_URL = env.str("EMAIL_REDIRECT")
+ACCOUNT_EMAIL_SUBJECT_PREFIX = SITE_NAME
 
 
 ACCOUNT_PASSWORD_RESET_EXPIRE_DAYS = 1
 
 
-EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+## CONFIGURE FOR DEBUG
+if DEBUG:
+    EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+else:
+    EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+
+    EMAIL_HOST = "smtp.gmail.com"
+    EMAIL_PORT = 587
+    EMAIL_USE_TLS = True
+
+    EMAIL_HOST_USER = "ats.resume.builder.business@gmail.com"
+    EMAIL_HOST_PASSWORD = env.str("EMAIL_APP_PASSWORD", "")
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -219,16 +232,6 @@ else:
             "NAME": BASE_DIR / "db.sqlite3",
         }
     }
-    # DATABASES = {
-    #     "default": {
-    #         "ENGINE": "django.db.backends.postgresql",
-    #         "NAME": env.str("POSTGRES_DB", default="resume_builder"),
-    #         "USER": env.str("POSTGRES_USER", default="postgres"),
-    #         "PASSWORD": env.str("POSTGRES_PASSWORD", default="postgres"),
-    #         "HOST": env.str("DB_HOST", default="127.0.0.1"),
-    #         "PORT": env.str("DB_PORT", default="5432"),
-    #     }
-    # }
 
 
 # Password validation

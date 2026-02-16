@@ -123,7 +123,7 @@ class UpdateContentView(APIView):
             return Response(
                 {"message": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
-        new_version, _ = DocumentVersion.objects.get_or_create(
+        new_version = DocumentVersion.objects.create(
             document=document_version.document,
             markdown=markdown_response,
         )

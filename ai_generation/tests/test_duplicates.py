@@ -102,4 +102,4 @@ class TestDuplicateDoc:
         detail2 = getattr(
             validation_error2.value, "detail", str(validation_error2.value)
         )
-        assert "markdown" in str(detail2).lower()
+        assert "context_hash" in str(detail2).lower()

@@ -1,6 +1,56 @@
-# Resume Builder
+## About this App
 
-App that creates custom resumes and cover letters. Users can upload their current resume or complete a form, copy and paste the job description, then download a cover letter or resume tailored to that job.
+This is an app that lets you build custom cover-letters and resumes in less than a minute. Why? I found myself copy and pasting job descriptions along with my resume into chatGPT and creating new pdf files from Google docs for every application. If you apply to 5 + roles a day that can be very fatiguing, so I built this app to streamline the process and save time. AI is being used to screen resumes and cover-letters (ATS) so you migth as well use AI tools to your advantage.
+
+## What is this?
+
+This is the backend for the app it is not meant to be used on it's own. This repo is responsible for authenticating users as well as processing and storing their data. You can refrence the API endpoints (documented clearly at /api/docs) to make these requests.
+The frontend repo can be found here: https://github.com/atticus-ezis/resume_builder_v2_frontend
+
+## Custom Logic
+
+**Backend Best Practices** Filter all documents by user and enforce permissions. Index custom fields like content_hashmap to speed up lookups. Enforce integrety errors to prevent duplicate content. Verify requests, handle error messages, create tests for custom logic and enpoint behavior.
+
+**Speed and efficiency:** Resumes can be uploaded as PDFs and reused across applications. A single endpoint generates both the resume and cover letter in one request. To avoid duplicate work, the system checks for an existing version before regenerating; if a match is found, it returns that version immediately. Users can force regeneration when content is corrupted or outdated. Markdown content is hashed for fast lookup and to prevent duplicate versions with identical content or names.
+
+**Customizability:** Resumes and cover letters are fully editable. Version history is preserved so users can track changes over time. Users can re-prompt the AI to refine suggestions or fix errors that are difficult to correct manually. These instructions are injected directly into the AI prompt, and the updated content is regenerated and saved as a new version.
+
+## How to Run?
+
+With Docker or with UV
+
+1. Docker (easiest):
+
+- Install and run docker locally.
+- Navigate to root directory (with docker-compose.yaml file)
+- Run the following command
+
+```
+docker-compose up
+```
+
+- visit:
+  http://0.0.0.0:8000/api/docs/
+
+2. UV:
+
+- Install UV (package manager) locally
+- Navigate to root directory
+- Run the commands
+
+```
+uv sync
+
+source .venv/bin/activate
+
+python manage.py migrate
+
+python manage.py runserver
+
+```
+
+- visit:
+  http://127.0.0.1:8000/api/docs/
 
 ## Account Creation and Management
 
@@ -13,176 +63,3 @@ App that creates custom resumes and cover letters. Users can upload their curren
 ### Tests
 
 Ensure custom verify email and confirm password change views return JWT tokens.
-
-## Applicant Profile
-
-Created an "applicant_profile" app that collects personal work history and experience of user. Users can upload Resume PDFs or submit a form to influence the Resume generation. This info will be saved as UserContext. Each user can have multiple resumes to choose from.
-
-### Databases
-
-- `context` - A single text field used as context for the AI. Will be PDF upload or form.
-- FK (user) - one-to-many relationship with user.
-
-### Form Submission Structure
-
-See: [`forms/applicant_context.json`](forms/applicant_context.json)
-
-### Endpoints (authentication required)
-
-- `POST api/context/applicant/upload-pdf` - Converts PDF to string and
-  the database, returns 200.
-
-  ```json
-  { "file": "...", "name": "..." }
-  ```
-
-- `POST/DELETE/PUT/PATCH api/applicant/` - Finalizes the text and saves it to
-  returns 200 and text for user review.
-
-  ```json
-  { "name": "...", "context": "..." }
-  ```
-
-## Job Profile
-
-Stores context about the job for AI. Frontend will structure the dictionary (hashmap) before sending as "job_context" and "company_name". If cover letter is selected then additional fields will be added to form such as Hiring Manager and Location.
-
-See: [`forms/job_description.json`](forms/job_description.json)
-
-### Endpoints (authentication required)
-
-CRUD from viewset
-
-- `POST api/context/job/` - Stores form data with user
-- `GET api/context/job/` -
-- `GET api/context/job/{id}` -
-- `PUT api/context/job/{id}` -
-- `PATCH api/context/job/{id}` -
-- `DELETE api/context/job/{id}` -
-  ```json
-  { "company_name": "...", "job_context": "..." }
-  ```
-
-## AI Generation
-
-Takes context from user and job profiles and passes it to AI. Returns a Markdown text file that can be downloaded as PDF after user review. Creates 2 prompts with functions - one for resume and cover letter. After initial generation, allows a "re-prompt" with user instructions and user edit of markdown before download.
-
-### Databases
-
-**Note:** Should persist these instances incase user wants to undo future edits.
-
-- Document:
-  user (FK)
-  user_context (FK)
-  job_description (FK)
-  document_type: "resume", "cover_letter"
-  final_version: DocumentVerison (FK)
-
-- DocumentVersion:
-  document (FK)
-  markdown: TextField
-  version_name: IntField
-
-### Endpoints
-
-#### Generate Resume + Cover Letter
-
-- `POST api/ai-call/`
-
-  ```json
-  {
-    "user_context_id": "...",
-    "job_description_id": "...",
-    "command": "generate_resume" | "generate_cover_letter" | "generate_both"
-  }
-  ```
-
-  Returns:
-
-  ```json
-  {
-    [
-      {
-        "markdown": "...",
-        "document": { "id": "", "type": "" },
-        "document_version": { "id": "", "version": "" }
-      }, 2x
-    ]
-  }
-  ```
-
-#### Update Prompt
-
-- `POST api/ai-call/update-content/`
-
-  ```json
-  {
-    "instructions": "...",
-    "document_version_id": "int",
-    "markdown": "optional" // only include if user edits text before re-prompting. This will create a new doc version
-  }
-  ```
-
-  Need (markdown + document_id) or (document_version_id)
-
-  Returns:
-
-  ```json
-  {
-    "markdown": "...",
-    "document": { "id": "", "type": "" },
-    "document_version": { "id": "", "version": "" }
-  }
-  ```
-
-#### Download Markdown
-
-Fetch from with saved draft or edited content
-
-- `POST api/finalize-and-download/`
-
-  ```json
-  {
-    "file_name": "...",
-    "document_version_id": "optional",
-    "markdown": "optional" // creates new document version if exists and different
-  }
-  ```
-
-  Returns:
-  (pdf file)
-
-  ### Document Display and Management
-
-  api/context/document/ (CRUD)
-
-  Document (list)
-  fields = [
-  "id", "document_type", "company_name", "job_position"
-  ]
-
-  Document (detail)
-  fields = [
-  "id",
-  "job_description", (FK)
-  "user_context", (FK)
-  "document_type",
-  "content",
-  "draft_count": int,
-  "created_at",
-  ]
-
-  ###
-
-  api/context/document-version/ (CRUD)
-
-  DocumentVersion
-  fields = ["id", "document", "version_name", "markdown", "created_at"]
-
-  #### Docker Notes
-
-  build:
-  docker build -t resume-builder .
-
-  run:
-  docker run -p 8000:8000 resume-builder

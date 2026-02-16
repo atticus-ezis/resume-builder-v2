@@ -32,8 +32,6 @@ services:
     environment:
       - DB_HOST=db
       - DATABASE_URL=postgresql://postgres:postgres@db:5432/resume_builder
-      - SECRET_KEY=${SECRET_KEY:-django-insecure-dev-key}
-      - OPENAI_API_KEY=${OPENAI_API_KEY:-sk-proj-1234567890}
     depends_on:
       db:
         condition: service_healthy

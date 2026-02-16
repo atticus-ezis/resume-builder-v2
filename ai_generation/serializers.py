@@ -35,10 +35,15 @@ class UpdateContentSerializer(serializers.Serializer):
 
 
 class DocumentVersionHistoryResponseSerializer(serializers.ModelSerializer):
+    version_type = serializers.SerializerMethodField()
+
     class Meta:
         model = DocumentVersion
-        fields = ["id", "version_name", "updated_at"]
-        read_only_fields = ["id", "updated_at", "version_name"]
+        fields = ["id", "version_name", "version_type", "updated_at"]
+        read_only_fields = ["id", "updated_at", "version_name", "version_type"]
+
+    def get_version_type(self, obj):
+        return obj.document.document_type
 
 
 class DocumentVersionRequestSerializer(serializers.ModelSerializer):

@@ -1,6 +1,12 @@
-group cover letter + resume as single application
+1. Pick domain name:
+   ats-resume-builder
 
-check by running the docker gunicorn service and see if frontend can connect.
+2. connect email backend
+
+3. set site domain
+
+4. configure site names
+   create DNS routes for Render and Vercel that map sub-domains
 
 Important Checks:
 make sure the same generation doesn't occur twice. If the combination of job and application exist, search for an existing document before regenerating.
