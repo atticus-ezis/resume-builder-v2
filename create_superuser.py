@@ -22,7 +22,7 @@ if env_file.exists():
 
 User = get_user_model()
 
-if not User.objects.filter(username="admin").exists():
+if not User.objects.filter(username="admin").exists() and env.str("ADMIN_PASSWORD"):
     User.objects.create_superuser(
         username="admin",
         email="admin@example.com",
