@@ -2,7 +2,6 @@ from datetime import datetime
 
 import markdown
 from django.template.loader import render_to_string
-from openai import OpenAI
 from weasyprint import HTML
 
 from ai_generation.constants import (
@@ -36,6 +35,8 @@ class APICall:
     def __init__(
         self, user_context: UserContext, job_description: JobDescription, command: str
     ):
+        from openai import OpenAI
+
         self.user_context = user_context
         self.job_description = job_description
         self.command = command
@@ -99,6 +100,8 @@ class APICall:
 
 class UpdateContent:
     def __init__(self, instructions: str, document_version: DocumentVersion):
+        from openai import OpenAI
+
         self.markdown = document_version.markdown
         self.instructions = instructions
         self.document_type = document_version.document.document_type

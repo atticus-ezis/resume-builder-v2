@@ -56,14 +56,12 @@ ALLOWED_HOSTS = env.list(
         "0.0.0.0",
         "localhost",
         "127.0.0.1",
-        "ats-resume-builder.com",
-        "api.ats-resume-builder.com",
     ],
 )
 
-CORS_ALLOWED_ORIGINS = [FRONTEND_DOMAIN, "http://localhost:3000"]
+CORS_ALLOWED_ORIGINS = [FRONTEND_DOMAIN]
 CORS_ALLOW_CREDENTIALS = True
-CSRF_TRUSTED_ORIGINS = [FRONTEND_DOMAIN, "http://localhost:3000"]
+CSRF_TRUSTED_ORIGINS = [FRONTEND_DOMAIN]
 
 
 # Application definition
