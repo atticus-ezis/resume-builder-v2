@@ -25,6 +25,7 @@ dependencies = [
     "pytest-django>=4.11.1",
     "ruff>=0.15.0",
     "weasyprint>=67.0",
+    "whitenoise>=6.6.0",
 ]
 
 [tool.ruff]

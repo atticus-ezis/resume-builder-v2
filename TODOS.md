@@ -10,3 +10,9 @@
 
 FOR AWS DEPLOY:
 create a ECR in AWS
+
+if weasey print fails check these removed libs:
+
+- html5lib==1.1
+- lxml==6.0.2
+- six==1.17.0

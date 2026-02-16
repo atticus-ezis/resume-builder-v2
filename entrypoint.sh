@@ -4,6 +4,8 @@ set -e
 PORT="${PORT:-8000}"
 echo "Running migrations..."
 python manage.py migrate
+echo "Collecting static files..."
+python manage.py collectstatic --noinput
 echo "Creating superuser..."
 python create_superuser.py
 echo "Starting gunicorn on 0.0.0.0:${PORT}..."
