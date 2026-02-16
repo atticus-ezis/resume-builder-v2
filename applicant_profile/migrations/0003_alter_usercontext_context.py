@@ -4,15 +4,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('applicant_profile', '0002_alter_usercontext_user'),
+        ("applicant_profile", "0002_alter_usercontext_user"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='usercontext',
-            name='context',
+            model_name="usercontext",
+            name="context",
             field=models.JSONField(),
         ),
     ]

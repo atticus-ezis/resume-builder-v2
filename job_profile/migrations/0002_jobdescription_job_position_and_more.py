@@ -4,21 +4,20 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('job_profile', '0001_initial'),
+        ("job_profile", "0001_initial"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='jobdescription',
-            name='job_position',
-            field=models.CharField(default='test', max_length=255),
+            model_name="jobdescription",
+            name="job_position",
+            field=models.CharField(default="test", max_length=255),
             preserve_default=False,
         ),
         migrations.AlterField(
-            model_name='jobdescription',
-            name='job_context',
+            model_name="jobdescription",
+            name="job_context",
             field=models.JSONField(),
         ),
     ]
