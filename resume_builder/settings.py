@@ -121,10 +121,7 @@ REST_AUTH = {
     "USE_JWT": True,
     "JWT_AUTH_COOKIE_USE_CSRF": True,
     "JWT_AUTH_HTTPONLY": True,
-    # correct?
-    "JWT_AUTH_SAMESITE": env.str(
-        "JWT_AUTH_SAMESITE", "Lax"
-    ),  # keep lax if domains match, else none
+    "JWT_AUTH_SAMESITE": env.str("JWT_AUTH_SAMESITE", "None"),
     "JWT_AUTH_SECURE": not DEBUG,
     "JWT_AUTH_COOKIE": "access_token",
     "JWT_AUTH_REFRESH_COOKIE": "refresh_token",
