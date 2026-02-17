@@ -291,13 +291,18 @@ wheels = [
 
 [[package]]
 name = "dj-rest-auth"
-version = "5.0.2"
+version = "7.1.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "django" },
     { name = "djangorestframework" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/60/0b/344743248e8282e4355661d2e136fffbc80ceeeebe47f9c2c10eaf41dbca/dj-rest-auth-5.0.2.tar.gz", hash = "sha256:aad7d912476169e9991547bf98645344d3939be2d7052098048d819524c115d9", size = 217511, upload-time = "2023-11-15T04:02:07.33Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/9f/e0/83a98a31d2398b310044f5f0060a1ae2bbdbaeece54761b1a2b3dd433bfb/dj_rest_auth-7.1.1.tar.gz", hash = "sha256:33dc190d3007aef6658db53352a6dc214e5d464e7efd97589dc2bb81ea1d5476", size = 420086, upload-time = "2026-02-17T01:57:26.479Z" }
+
+[package.optional-dependencies]
+with-social = [
+    { name = "django-allauth", extra = ["socialaccount"] },
+]
 
 [[package]]
 name = "django"
@@ -1042,7 +1047,7 @@ version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
     { name = "dj-database-url" },
-    { name = "dj-rest-auth" },
+    { name = "dj-rest-auth", extra = ["with-social"] },
     { name = "django" },
     { name = "django-allauth", extra = ["socialaccount"] },
     { name = "django-cors-headers" },
@@ -1067,7 +1072,7 @@ dependencies = [
 [package.metadata]
 requires-dist = [
     { name = "dj-database-url", specifier = ">=3.0.1" },
-    { name = "dj-rest-auth", specifier = ">=5.0.2" },
+    { name = "dj-rest-auth", extras = ["with-social"], specifier = ">=5.0.2" },
     { name = "django", specifier = ">=6.0" },
     { name = "django-allauth", extras = ["socialaccount"], specifier = ">=65.13.1" },
     { name = "django-cors-headers", specifier = ">=4.9.0" },
