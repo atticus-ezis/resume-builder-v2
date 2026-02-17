@@ -14,6 +14,8 @@ from accounts.serializers import UserProfileSerializer
 
 logger = logging.getLogger(__name__)
 
+# example google client id: 1234567890-abc123def456.apps.googleusercontent.com
+
 
 class UserProfileView(RetrieveAPIView):
     """
