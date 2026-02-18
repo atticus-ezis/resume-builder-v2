@@ -40,6 +40,7 @@ from rest_framework.response import Response
 from rest_framework.routers import DefaultRouter
 from rest_framework_simplejwt.views import TokenVerifyView
 
+from accounts.social_views import GoogleLoginView
 from accounts.views import (
     CSRFExemptLoginView,
     CustomLogoutView,
@@ -153,6 +154,11 @@ urlpatterns = [
                                 "password/change/",
                                 PasswordChangeView.as_view(),
                                 name="password_change",
+                            ),
+                            path(
+                                "auth/google/",
+                                GoogleLoginView.as_view(),
+                                name="google_login",
                             ),
                         ]
                     ),

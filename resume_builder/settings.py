@@ -80,6 +80,7 @@ INSTALLED_APPS = [
     "allauth",
     "allauth.account",
     "allauth.socialaccount",
+    "allauth.socialaccount.providers.google",
     # rest framework
     "rest_framework",
     "rest_framework_simplejwt",  # redundant?
@@ -148,6 +149,9 @@ ACCOUNT_EMAIL_VERIFICATION = "mandatory"
 ACCOUNT_ADAPTER = "accounts.adapters.CustomAccountAdapter"
 ACCOUNT_DEFAULT_HTTP_PROTOCOL = env.str("HTTP_PROTOCOL", "http")
 ACCOUNT_EMAIL_SUBJECT_PREFIX = SITE_NAME
+
+SOCIALACCOUNT_EMAIL_AUTHENTICATION = True
+SOCIALACCOUNT_EMAIL_AUTHENTICATION_AUTO_CONNECT = True  # needs testing
 
 
 ACCOUNT_PASSWORD_RESET_EXPIRE_DAYS = 1
