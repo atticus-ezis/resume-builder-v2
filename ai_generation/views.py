@@ -7,7 +7,6 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from ai_generation.constants import COMMAND_TO_DOCUMENT_TYPES
 from ai_generation.models import Document, DocumentVersion
 from ai_generation.serializers import (
     DocumentListSerializer,
@@ -25,70 +24,28 @@ from ai_generation.services import (  # noqa: F401
 from applicant_profile.models import UserContext
 from job_profile.models import JobDescription
 from resume_builder.pagination import CustomPageNumberPagination
-from resume_builder.utils import compute_context_hash
+
+from .tasks import generate_resume_and_cover_letter
 
 # Create your views here.
 
 # frontend must match context models
 
 
+# needs celery and redis
 class GenerateResumeAndCoverLetterView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
         request_data = self.get_context(request)
-        regenerate_version = request_data.get("regenerate_version", False)
-        commands = COMMAND_TO_DOCUMENT_TYPES[request_data["command"]]
-        response_data = []
-        for command in commands:
-            message = ""
-            document, created = Document.objects.get_or_create(
-                user=request.user,
-                user_context=request_data["user_context"],
-                job_description=request_data["job_description"],
-                document_type=command,
-            )
-
-            document_version = None
-            if not regenerate_version and not created:
-                existing = (
-                    document.final_version
-                    or document.versions.order_by("-updated_at").first()
-                )
-                if existing and existing.markdown:
-                    document_version = existing
-                    message = "Found an existing document on file"
-
-            if document_version is None:
-                try:
-                    chat_responses = APICall(
-                        request_data["user_context"],
-                        request_data["job_description"],
-                        command,
-                    ).execute()
-                except Exception as e:
-                    return Response(
-                        {"detail": "AI Request Failed", "message": str(e)},
-                        status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                    )
-                context_hash = compute_context_hash(chat_responses)
-                (
-                    document_version,
-                    version_created,
-                ) = DocumentVersion.objects.get_or_create(
-                    document=document,
-                    context_hash=context_hash,
-                    defaults={"markdown": chat_responses},
-                )
-                if not version_created:
-                    message = "The contents of the regenrated document match the original. Consider adding additional instructions."
-
-            serializer = DocumentVersionResponseSerializer(document_version)
-            item = {"document_version": serializer.data}
-            if message:
-                item["message"] = message
-            response_data.append(item)
-        return Response(response_data, status=status.HTTP_200_OK)
+        task = generate_resume_and_cover_letter.delay(
+            user_context_id=request_data["user_context"].id,
+            job_description_id=request_data["job_description"].id,
+            command=request_data["command"],
+            regenerate_version=request_data.get("regenerate_version", False),
+            user_id=request.user.id,
+        )
+        return Response({"task_id": task.id}, status=status.HTTP_200_OK)
 
     def get_context(self, request):
         # extract data
