@@ -17,6 +17,18 @@ services:
       timeout: 5s
       retries: 5
 
+  redis:
+    image: redis:7-alpine
+    container_name: resume-builder-redis
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
   web:
     build:
       context: .
@@ -32,14 +44,37 @@ services:
     environment:
       - DB_HOST=db
       - DATABASE_URL=postgresql://postgres:postgres@db:5432/resume_builder
+      - REDIS_HOST=redis://redis:6379/1
+      - ADMIN_PASSWORD=sakanamama119!
     depends_on:
       db:
         condition: service_healthy
+      redis:
+        condition: service_healthy
     restart: unless-stopped
-    # Override the default command to ensure migrations run on startup
-    command: >
-      sh -c "python manage.py migrate &&
-             python manage.py runserver 0.0.0.0:8000"
+    # "web" triggers entrypoint web path (migrate, collectstatic, gunicorn)
+    command: ["web"]
+
+  celery:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: resume-builder-celery
+    volumes:
+      - .:/app
+      - /app/.venv
+    environment:
+      - DB_HOST=db
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/resume_builder
+      - REDIS_HOST=redis://redis:6379/1
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    # "celery" triggers entrypoint to run: celery -A resume_builder worker -l info
+    command: ["celery"]
 
 volumes:
   postgres_data:
