@@ -58,6 +58,7 @@ from ai_generation.views import (
 )
 from applicant_profile.views import UserContextViewSet
 from job_profile.views import JobDescriptionViewSet
+from resume_builder.views import TaskResultView
 
 router = DefaultRouter()
 router.register(r"applicant", UserContextViewSet, basename="applicant")
@@ -179,6 +180,11 @@ urlpatterns = [
                     name="document_version_history",
                 ),
                 path("", include(router.urls)),
+                path(
+                    "task-result/<str:task_id>/",
+                    TaskResultView.as_view(),
+                    name="task_result",
+                ),
             ]
         ),
     ),
