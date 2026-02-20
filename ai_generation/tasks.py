@@ -9,6 +9,8 @@ from applicant_profile.models import UserContext
 from job_profile.models import JobDescription
 from resume_builder.utils import compute_context_hash
 
+# identify infinte call
+
 
 @shared_task
 def generate_resume_and_cover_letter(
@@ -21,6 +23,7 @@ def generate_resume_and_cover_letter(
 
     response_data = []
     for cmd in commands:
+        # triggers? check cmd
         message = ""
         document, created = Document.objects.get_or_create(
             user=user,
@@ -38,8 +41,8 @@ def generate_resume_and_cover_letter(
             if existing and existing.markdown:
                 document_version = existing
                 message = "Found an existing document on file"
-
         if document_version is None:
+            # does AI get called?
             try:
                 chat_responses = APICall(
                     user_context=user_context,

@@ -241,8 +241,8 @@ else:
     }
 
 # Use Redis DB 1 by default so we don't share the queue with other projects (e.g. DB 0).
-CELERY_BROKER_URL = env.str("REDIS_HOST", default="redis://localhost:6379/1")
-CELERY_TASK_TIME_LIMIT = 15 * 60
+CELERY_BROKER_URL = env.str("REDIS_HOST", default="redis://localhost:6379/0")
+CELERY_TASK_TIME_LIMIT = 5 * 60
 CELERY_RESULT_BACKEND = "django-db"
 
 
