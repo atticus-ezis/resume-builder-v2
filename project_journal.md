@@ -16,6 +16,10 @@ In production:
 1. task runs indefintley
    In development
 2. Web container lacks permission
+3. Production server is stalling when I login with Google
+   My cors rejects the google/ call and I get a 500 error
+
+﻿
 
 SOLUTIONS:
 
