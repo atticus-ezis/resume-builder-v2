@@ -48,10 +48,6 @@ OPENAI_API_KEY = env.str("OPENAI_API_KEY", "fake-key-123")
 # Backend hostname only (no scheme), e.g. "api.ats-resume-builder.com"
 BACKEND_DOMAIN = env.str("BACKEND_DOMAIN", "localhost")
 
-# Cookie domain shared across subdomains, e.g. ".ats-resume-builder.com"
-# None in local dev — Django scopes the cookie to the current host (localhost)
-FRONTEND_DOMAIN = env.str("FRONTEND_DOMAIN", None)
-
 # Comma-separated list of allowed frontend origins, e.g.:
 # "https://www.ats-resume-builder.com,https://ats-resume-builder.com"
 FRONTEND_ORIGINS = env.list("FRONTEND_ORIGINS", default=["http://localhost:3000"])
@@ -69,7 +65,7 @@ CORS_ALLOWED_ORIGINS = FRONTEND_ORIGINS
 CORS_ALLOW_CREDENTIALS = True
 
 CSRF_TRUSTED_ORIGINS = FRONTEND_ORIGINS
-CSRF_COOKIE_DOMAIN = FRONTEND_DOMAIN  # None locally; ".ats-resume-builder.com" in prod
+CSRF_COOKIE_DOMAIN = env.str("CSRF_COOKIE_DOMAIN", None)
 
 # ---------------------------------------------------------------------------
 # Installed apps
