@@ -45,6 +45,7 @@ services:
       - DB_HOST=db
       - DATABASE_URL=postgresql://postgres:postgres@db:5432/resume_builder
       - REDIS_HOST=redis://redis:6379/1
+      - ADMIN_PASSWORD=sakanamama119!
     depends_on:
       db:
         condition: service_healthy
