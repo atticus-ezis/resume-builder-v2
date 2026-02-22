@@ -1,11 +1,10 @@
-AI OPTIMIZATION ######## 2. add redis and celery 3. rate-limiting per user 4. consider batching (one call for resume and cover letter generation) 5. add instructions to versions for logging
+Try running celery service in the same Dockerfile as 'web' service for Render.
+DECIDE ON HOSTING
+Provider on Render or VPS
 
-REDIS ->
-add Docker command that starts and runs redis. Add redis to docker-compose
-docker run -d -p 6379:6379 redis
+Create a docker-compose with nginx
+Research deployment and hosting on Hertz VM.
 
-Add this instruction to README.MD startup
-cd /Users/atticusezis/coding/resume_builder_v2
-celery -A resume_builder worker -l info
-
-!!!! IMPORTAMT MUST ADD START COMMAND 'web' and 'celery' IN REDIS
+DEPLOY TO VPS (Eventually)
+Create a CI/CD Pipleine with GitHub Actions that triggers on push to main.
+Automatically build image, push and pull in server with ssh and restart server
