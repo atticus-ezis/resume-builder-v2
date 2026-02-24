@@ -1,0 +1,26 @@
+services:
+  web:
+    volumes:
+      - staticfiles:/app/staticfiles
+    env_file:
+      - .env.prod
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; req = urllib.request.Request('http://localhost:8000/health-check/', headers={'Host': 'api.ats-resume-builder.com'}); urllib.request.urlopen(req)"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  celery:
+    env_file:
+      - .env.prod
+
+  nginx:
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/prod.conf:/etc/nginx/nginx.conf:ro
+      - staticfiles:/app/staticfiles:ro
+      - /etc/letsencrypt/live/${BACKEND_DOMAIN}/fullchain.pem:/etc/nginx/certs/fullchain.pem:ro
+      - /etc/letsencrypt/live/${BACKEND_DOMAIN}/privkey.pem:/etc/nginx/certs/privkey.pem:ro

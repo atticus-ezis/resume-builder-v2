@@ -27,6 +27,7 @@ from dj_rest_auth.views import (
     UserDetailsView,
 )
 from django.contrib import admin
+from django.http import HttpResponse
 from django.urls import include, path
 from django.views.generic import TemplateView
 from drf_spectacular.views import (
@@ -81,8 +82,13 @@ def validate_user(request):
     )
 
 
+def health_check(request):
+    return HttpResponse("ok", status=200)
+
+
 urlpatterns = [
     path("admin/", admin.site.urls),
+    path("health-check/", health_check, name="health_check"),
     # path("applicant/", include("applicant_profile.urls")),
     path(
         "accounts/", include("allauth.account.urls")

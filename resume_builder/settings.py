@@ -57,7 +57,7 @@ FRONTEND_ORIGINS = env.list("FRONTEND_ORIGINS", default=["http://localhost:3000"
 # ---------------------------------------------------------------------------
 
 ALLOWED_HOSTS = env.list(
-    "BACKEND_DOMAIN",
+    "ALLOWED_HOSTS",
     default=["0.0.0.0", "localhost", "127.0.0.1"],
 )
 
@@ -65,7 +65,7 @@ CORS_ALLOWED_ORIGINS = FRONTEND_ORIGINS
 CORS_ALLOW_CREDENTIALS = True
 
 CSRF_TRUSTED_ORIGINS = FRONTEND_ORIGINS
-CSRF_COOKIE_DOMAIN = env.str("CSRF_COOKIE_DOMAIN", None)
+CSRF_COOKIE_DOMAIN = env.str("CSRF_COOKIE_DOMAIN", "localhost")
 
 # ---------------------------------------------------------------------------
 # Installed apps
@@ -174,8 +174,8 @@ SOCIALACCOUNT_EMAIL_VERIFICATION = "none"
 SOCIALACCOUNT_PROVIDERS = {
     "google": {
         "APP": {
-            "client_id": env.str("GOOGLE_CLIENT_ID"),
-            "secret": env.str("GOOGLE_CLIENT_SECRET"),
+            "client_id": env.str("GOOGLE_CLIENT_ID", "fake-id-123"),
+            "secret": env.str("GOOGLE_CLIENT_SECRET", "fake-secret-123"),
             "key": "",
         },
         "SCOPE": ["profile", "email"],

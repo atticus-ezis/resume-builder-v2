@@ -1,80 +1,37 @@
 services:
-  db:
-    image: postgres:16-alpine
-    container_name: resume-builder-db
-    environment:
-      POSTGRES_DB: resume_builder
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    ports:
-      - "5432"
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d resume_builder"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-
-  redis:
-    image: redis:7-alpine
-    container_name: resume-builder-redis
-    ports:
-      - "6379:6379"
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
-      timeout: 3s
-      retries: 5
-
   web:
     build:
       context: .
       dockerfile: Dockerfile
     container_name: resume-builder-web
-    ports:
-      - "8000:8000"
-    volumes:
-      # Mount the entire codebase for live code changes (no rebuild needed)
-      - .:/app
-      # Preserve the image's .venv so the bind mount doesn't hide installed deps
-      - /app/.venv
-    environment:
-      - DB_HOST=db
-      - DATABASE_URL=postgresql://postgres:postgres@db:5432/resume_builder
-      - REDIS_HOST=redis://redis:6379/1
-      - ADMIN_PASSWORD=sakanamama119!
-    depends_on:
-      db:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
+    expose:
+      - "8000"
     restart: unless-stopped
-    # "web" triggers entrypoint web path (migrate, collectstatic, gunicorn)
-    # command: ["web"]
+    entrypoint: ["/app/entrypoint-prod.sh"]
+    command: ["web"]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health-check/')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
   celery:
     build:
       context: .
       dockerfile: Dockerfile
     container_name: resume-builder-celery
-    volumes:
-      - .:/app
-      - /app/.venv
-    environment:
-      - DB_HOST=db
-      - DATABASE_URL=postgresql://postgres:postgres@db:5432/resume_builder
-      - REDIS_HOST=redis://redis:6379/1
+    restart: unless-stopped
+    entrypoint: ["/app/entrypoint-prod.sh"]
+    command: ["celery"]
+
+  nginx:
+    image: nginx:latest
+    container_name: resume-builder-nginx
     depends_on:
-      db:
-        condition: service_healthy
-      redis:
+      web:
         condition: service_healthy
     restart: unless-stopped
-    # "celery" triggers entrypoint to run: celery -A resume_builder worker -l info
-    # command: ["celery"]
 
 volumes:
-  postgres_data:
+  staticfiles:
