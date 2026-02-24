@@ -2,9 +2,8 @@
 
 This is an app that lets you build custom cover-letters and resumes in less than a minute. Why? I found myself copy and pasting job descriptions along with my resume into chatGPT and creating new pdf files from Google docs for every application. If you apply to 5 + roles a day that can be very fatiguing, so I built this app to streamline the process and save time. AI is being used to screen resumes and cover-letters (ATS) so you migth as well use AI tools to your advantage.
 
-## What is this?
-
-This is the backend for the app it is not meant to be used on it's own. This repo is responsible for authenticating users as well as processing and storing their data. You can refrence the API endpoints (documented clearly at /api/docs) to make these requests.
+This is the backend for the app. It manages user Authentication, and database requests.
+You can refrence the API endpoints (documented clearly at /api/docs) to make these requests.
 The frontend repo can be found here: https://github.com/atticus-ezis/resume_builder_v2_frontend
 
 ## Custom Logic
@@ -19,14 +18,14 @@ The frontend repo can be found here: https://github.com/atticus-ezis/resume_buil
 
 With Docker or with UV
 
-1. Docker (easiest):
+1. Docker:
 
 - Install and run docker locally.
 - Navigate to root directory (with docker-compose.yaml file)
 - Run the following command
 
 ```
-docker-compose up
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up
 ```
 
 - visit:

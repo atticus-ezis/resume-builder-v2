@@ -41,11 +41,12 @@ class TestDuplicateDoc:
         response = client.post(url, request_body, format="json")
 
         assert response.status_code == status.HTTP_200_OK
-        assert len(response.data) == 1
-        assert (
-            response.data[0]["document_version"]["id"] == existing_document_version.id
-        )
-        assert response.data[0]["document_version"]["markdown"] == "test markdown"
+        assert "task_id" in response.data
+        # API returns task_id; with eager Celery the task runs synchronously and reuses existing version
+        document.refresh_from_db()
+        version = document.versions.order_by("-updated_at").first()
+        assert version.id == existing_document_version.id
+        assert version.markdown == "test markdown"
 
     def test_integrity_error_raises_validation_error(self, authenticated_client):
         """Duplicate (document, version_name) or (document, context_hash) is caught and converted to ValidationError."""
