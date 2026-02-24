@@ -31,3 +31,4 @@ ssl certification failed
 resume-builder-nginx | 2026/02/24 05:37:41 [emerg] 1#1: cannot load certificate "/etc/nginx/certs/fullchain.pem": PEM_read_bio_X509_AUX() failed (SSL: error:0480006C:PEM routines::no start line:Expecting: TRUSTED CERTIFICATE)
 '''
 SOLUTION
+ssl certification happens in the VM.

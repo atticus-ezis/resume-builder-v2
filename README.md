@@ -1,64 +1,42 @@
 ## About this App
 
-This is an app that lets you build custom cover-letters and resumes in less than a minute. Why? I found myself copy and pasting job descriptions along with my resume into chatGPT and creating new pdf files from Google docs for every application. If you apply to 5 + roles a day that can be very fatiguing, so I built this app to streamline the process and save time. AI is being used to screen resumes and cover-letters (ATS) so you migth as well use AI tools to your advantage.
-
-This is the backend for the app. It manages user Authentication, and database requests.
-You can refrence the API endpoints (documented clearly at /api/docs) to make these requests.
-The frontend repo can be found here: https://github.com/atticus-ezis/resume_builder_v2_frontend
+This app lets you build custom cover letters and resumes in under a minute. I built it to cut down on copying job descriptions into ChatGPT and manually creating PDFs. This backend handles authentication and database requests. API docs are at available at `/api/docs`. Frontend: [resume_builder_v2_frontend](https://github.com/atticus-ezis/resume_builder_v2_frontend).
 
 ## Custom Logic
 
-**Backend Best Practices** Filter all documents by user and enforce permissions. Index custom fields like content_hashmap to speed up lookups. Enforce integrety errors to prevent duplicate content. Verify requests, handle error messages, create tests for custom logic and enpoint behavior.
+**Asynchronous?**  
+Requests are handled asynchronously so HTTP requests aren’t blocked while the response is generated. Celery and Redis are used to run AI generation in the background.
 
-**Speed and efficiency:** Resumes can be uploaded as PDFs and reused across applications. A single endpoint generates both the resume and cover letter in one request. To avoid duplicate work, the system checks for an existing version before regenerating; if a match is found, it returns that version immediately. Users can force regeneration when content is corrupted or outdated. Markdown content is hashed for fast lookup and to prevent duplicate versions with identical content or names.
+**Latency?**  
+Latency is handled in two ways. (1) User responses are cached and returned instead of triggering an unnecessary re-generate. (2) Responses are parsed and stored with a `context_hash` that is indexed to avoid caching duplicates by accident.
 
-**Customizability:** Resumes and cover letters are fully editable. Version history is preserved so users can track changes over time. Users can re-prompt the AI to refine suggestions or fix errors that are difficult to correct manually. These instructions are injected directly into the AI prompt, and the updated content is regenerated and saved as a new version.
+## How to Run
 
-## How to Run?
+**Docker**
 
-With Docker or with UV
-
-1. Docker:
-
-- Install and run docker locally.
-- Navigate to root directory (with docker-compose.yaml file)
-- Run the following command
-
-```
+```bash
 docker compose -f docker-compose.yml -f docker-compose.dev.yml up
 ```
 
-- visit:
-  http://0.0.0.0:8000/api/docs/
+Then open: http://localhost:8000/api/docs/
 
-2. UV:
+**UV**
 
-- Install UV (package manager) locally
-- Navigate to root directory
-- Run the commands
-
-```
+```bash
 uv sync
-
 source .venv/bin/activate
-
 python manage.py migrate
-
 python manage.py runserver
-
 ```
 
-- visit:
-  http://127.0.0.1:8000/api/docs/
+Then open: http://localhost:8000/api/docs/
 
-## Account Creation and Management
+## Authentication
 
-- JWT Cookies that use blacklist / rotation
-- Endpoints come from: [Dj Rest Auth](https://github.com/iMerica/dj-rest-auth/)
-- urls start with "api/accounts/..."
-- Customized emails that link to frontend
-- Created auto-login for email verification and password resets
+- JWT in cookies with blacklist and rotation
+- Endpoints follow [Dj Rest Auth](https://github.com/iMerica/dj-rest-auth/) under `api/accounts/...`
+- Custom emails with links to the frontend; auto-login after email verification and password reset
 
-### Tests
+## Tests
 
-Ensure custom verify email and confirm password change views return JWT tokens.
+Important tests: **Accounts** — full registration and email verification (verify link then login). **AI generation** — duplicate handling (reuse existing document version instead of regenerating; integrity errors for duplicate version name or context hash). **Permissions** — generate endpoint returns 401 when unauthenticated. **Versions** — auto-incrementing and custom version names for document versions.
