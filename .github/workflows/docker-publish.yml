@@ -31,7 +31,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5.5.0
         with:
-          images: ghcr.io/${{ github.repository }}
+          images: ghcr.io/atticus-ezis/resume-builder-v2
           tags: |
             type=sha,prefix=sha-
             type=raw,value=latest

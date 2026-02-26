@@ -30,8 +30,21 @@ services:
       retries: 5
 
   web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: resume-builder-web
+    expose:
+      - "8000"
     ports:
       - "8000:8000"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health-check/')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
     volumes:
       - .:/app
       - /app/.venv
@@ -47,6 +60,12 @@ services:
         condition: service_healthy
 
   celery:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: resume-builder-celery
+    command: ["celery"]
+    restart: unless-stopped
     volumes:
       - .:/app
       - /app/.venv
@@ -61,6 +80,12 @@ services:
         condition: service_healthy
 
   nginx:
+    image: nginx:latest
+    container_name: resume-builder-nginx
+    depends_on:
+      web:
+        condition: service_healthy
+    restart: unless-stopped
     ports:
       - "80:80"
     volumes:
@@ -69,3 +94,4 @@ services:
 
 volumes:
   postgres_data:
+  staticfiles:

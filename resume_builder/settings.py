@@ -51,7 +51,7 @@ BACKEND_DOMAIN = env.str("BACKEND_DOMAIN", "localhost")
 # Comma-separated list of allowed frontend origins, e.g.:
 # "https://www.ats-resume-builder.com,https://ats-resume-builder.com"
 FRONTEND_ORIGINS = env.list("FRONTEND_ORIGINS", default=["http://localhost:3000"])
-# Base URL for email links (verify-email, password reset). Defaults to first origin.
+# Used by Adaptor email links (verify-email, password reset). Defaults to first origin.
 FRONTEND_DOMAIN = env.str(
     "FRONTEND_DOMAIN",
     default=FRONTEND_ORIGINS[0] if FRONTEND_ORIGINS else "http://localhost:3000",
