@@ -15,7 +15,7 @@ Latency is handled in two ways. (1) User responses are cached and returned inste
 **Docker**
 
 ```bash
-docker compose -f docker-compose.yml -f docker-compose.dev.yml up
+docker compose -f docker-compose.dev.yml up
 ```
 
 Then open: http://localhost:8000/api/docs/

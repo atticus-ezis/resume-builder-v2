@@ -20,30 +20,37 @@ Remove app volume mounts in production containers because it will override what 
 Create mount volume for static files inside nginx directly so it doens't need to prox request from web.
 User should be created and given permission in VM to run commands.
 
-THREE STAGE APPROACH:
-
-## docker-compose.yml ->
-
-builds 'web', 'nginx' and 'celery' from image and runs entrypoint.sh.
-Volumes: static files
+TWO FILE APPROACH:
 
 ## docker-compose.dev.yml ->
 
-builds redis and db containers and connects them.
-Volumes: .app codbase and local db data, dev config for nginx
+Builds web, celery, nginx from Dockerfile. Runs db and redis locally.
+Volumes: app codebase, local db data, dev nginx config.
 
 ## docker-compose.prod.yml ->
 
-links the .env.prod to celery and web containers. nginx listens on 443
-uses independently hosted db and redis
-volumes: prod config for nginx, static, ssl certs
+Pulls web and celery from GHCR image. nginx listens on 443.
+Uses independently hosted db and redis.
+Volumes: prod nginx config, static files, SSL certs.
 
 COMMANDS:
 
 # Development
 
-docker compose -f docker-compose.yml -f docker-compose.dev.yml up
+docker compose -f docker-compose.dev.yml up
+
+# view logs:
+
+docker compose -f docker-compose.dev.yml logs
+
+# down and remove volumes
+
+docker compose -f docker-compose.dev.yml down -v
+
+# build
+
+docker compose -f docker-compose.dev.yml up --build
 
 # Production (on VM)
 
-docker compose -f docker-compose.yml -f docker-compose.prod.yml --env-file .env.prod up -d
+docker compose -f docker-compose.prod.yml up -d --pull always

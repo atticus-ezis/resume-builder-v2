@@ -42,12 +42,12 @@ ENV PATH="/app/.venv/bin:$PATH"
 
 WORKDIR /app
 COPY . .
-RUN chmod +x /app/entrypoint.sh /app/entrypoint-prod.sh
-RUN chmod +x /app/entrypoint-prod.sh
+RUN chmod +x /app/entrypoint.sh
 
 EXPOSE 8000
 # Use 1 worker on memory-limited hosts (e.g. Render); override with GUNICORN_WORKERS=3 if needed
 ENV GUNICORN_WORKERS=1
 # Render sets PORT=10000; entrypoint reads PORT and binds so the port scan succeeds
 ENTRYPOINT ["/app/entrypoint.sh"]
+CMD ["web"]
 
