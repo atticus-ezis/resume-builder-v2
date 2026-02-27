@@ -25,7 +25,7 @@ from applicant_profile.models import UserContext
 from job_profile.models import JobDescription
 from resume_builder.pagination import CustomPageNumberPagination
 
-from .tasks import generate_resume_and_cover_letter
+from .tasks import generate_resume_and_cover_letter, update_content
 
 # Create your views here.
 
@@ -74,18 +74,10 @@ class UpdateContentView(APIView):
         document_version = serializer.validated_data["document_version"]
         instructions = serializer.validated_data["instructions"]
 
-        try:
-            markdown_response = UpdateContent(instructions, document_version).execute()
-        except Exception as e:
-            return Response(
-                {"message": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-        new_version = DocumentVersion.objects.create(
-            document=document_version.document,
-            markdown=markdown_response,
+        task = update_content.delay(
+            document_version_id=document_version.id, instructions=instructions
         )
-        serializer = DocumentVersionResponseSerializer(new_version)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response({"task_id": task.id}, status=status.HTTP_200_OK)
 
 
 class DocumentViewSet(viewsets.ModelViewSet):

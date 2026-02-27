@@ -22,11 +22,10 @@ if env_file.exists():
 
 User = get_user_model()
 
-if not User.objects.filter(username="admin").exists() and env.str("ADMIN_PASSWORD"):
+if not User.objects.filter(username="admin").exists():
     User.objects.create_superuser(
         username="admin",
-        email="admin@example.com",
-        password=env.str("ADMIN_PASSWORD"),
+        password=env.str("ADMIN_PASSWORD", "ThisIsADevelopmentPassword4321!"),
     )
     print("Superuser created")
 else:
