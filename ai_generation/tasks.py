@@ -4,7 +4,7 @@ from django.contrib.auth.models import User
 from ai_generation.constants import COMMAND_TO_DOCUMENT_TYPES
 from ai_generation.models import Document, DocumentVersion
 from ai_generation.serializers import DocumentVersionResponseSerializer
-from ai_generation.services import APICall
+from ai_generation.services import APICall, UpdateContent
 from applicant_profile.models import UserContext
 from job_profile.models import JobDescription
 from resume_builder.utils import compute_context_hash
@@ -70,3 +70,18 @@ def generate_resume_and_cover_letter(
         response_data.append(item)
 
     return response_data
+
+
+@shared_task
+def update_content(document_version_id, instructions):
+    document_version = DocumentVersion.objects.get(pk=document_version_id)
+    try:
+        markdown_response = UpdateContent(instructions, document_version).execute()
+    except Exception as e:
+        raise Exception(f"Failed to update content: {str(e)}") from e
+    new_version = DocumentVersion.objects.create(
+        document=document_version.document,
+        markdown=markdown_response,
+    )
+    serializer = DocumentVersionResponseSerializer(new_version)
+    return serializer.data

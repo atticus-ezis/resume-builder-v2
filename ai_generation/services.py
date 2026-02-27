@@ -50,6 +50,7 @@ class APICall:
             cover_letter_instructions = (
                 f"If Hiring Manager is blank, address the letter to: '{self.job_description.company_name}'s Hiring Team "
                 f"instead. Not '[Hiring Manager Name]'. The Date is: '{datetime.now().strftime('%B %d, %Y')}'."
+                f"Never use placeholders like '[Your Name]', '[Hiring Manager Name]', or '[Date]'. Use real values from the provided details or omit the element.."
             )
         else:
             cover_letter_instructions = ""
