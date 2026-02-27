@@ -1,6 +1,8 @@
 services:
   web:
-    # here 'latest' is the most recent sha value. Top revert to specific sha if needed.
+    # github's created dockerimage
+    # here 'latest' is the most recent sha value.
+    # sha value can be specified to revert to specific version if needed.
     image: ghcr.io/atticus-ezis/resume-builder-v2:latest
     volumes:
       - staticfiles:/app/staticfiles
@@ -25,12 +27,9 @@ services:
     env_file:
       - .env.prod
 
-  nginx:
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./nginx/prod.conf:/etc/nginx/nginx.conf:ro
-      - staticfiles:/app/staticfiles:ro
-      - /etc/letsencrypt/live/${BACKEND_DOMAIN}/fullchain.pem:/etc/nginx/certs/fullchain.pem:ro
-      - /etc/letsencrypt/live/${BACKEND_DOMAIN}/privkey.pem:/etc/nginx/certs/privkey.pem:ro
+networks:
+  shared-network:
+    external: true
+
+volumes:
+  staticfiles:
