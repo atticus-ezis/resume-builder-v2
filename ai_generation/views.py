@@ -79,19 +79,6 @@ class UpdateContentView(APIView):
         )
         return Response({"task_id": task.id}, status=status.HTTP_200_OK)
 
-        # try:
-        #     markdown_response = UpdateContent(instructions, document_version).execute()
-        # except Exception as e:
-        #     return Response(
-        #         {"message": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
-        #     )
-        # new_version = DocumentVersion.objects.create(
-        #     document=document_version.document,
-        #     markdown=markdown_response,
-        # )
-        # serializer = DocumentVersionResponseSerializer(new_version)
-        # return Response(serializer.data, status=status.HTTP_200_OK)
-
 
 class DocumentViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
